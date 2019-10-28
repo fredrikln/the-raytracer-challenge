@@ -2,7 +2,7 @@ use std::ops::{Add, Sub};
 use crate::vector::Vector;
 use float_cmp::approx_eq;
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct Point {
   pub x: f32,
   pub y: f32,

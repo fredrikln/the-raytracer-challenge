@@ -1,7 +1,7 @@
 use std::ops::{Add, Sub, Neg, Mul, Div};
 use float_cmp::approx_eq;
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct Vector {
   pub x: f32,
   pub y: f32,
