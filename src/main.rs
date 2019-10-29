@@ -1,10 +1,12 @@
 mod point;
 mod vector;
 mod canvas;
+mod matrix;
 
 use point::Point;
 use vector::Vector;
 use canvas::{Canvas, Color};
+use matrix::Matrix;
 
 
 #[derive(Debug)]
