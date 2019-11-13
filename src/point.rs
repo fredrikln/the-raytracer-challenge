@@ -1,6 +1,6 @@
 use std::ops::{Add, Sub};
 use crate::vector::Vector;
-use float_cmp::approx_eq;
+use crate::utils::equal;
 
 #[derive(Debug, Copy, Clone)]
 pub struct Point {
@@ -11,7 +11,7 @@ pub struct Point {
 
 impl PartialEq for Point {
   fn eq(&self, other: &Self) -> bool {
-    approx_eq!(f32, self.x, other.x) && approx_eq!(f32, self.y, other.y) && approx_eq!(f32, self.z, other.z)
+    equal(self.x, other.x) && equal(self.y, other.y) && equal(self.z, other.z)
   }
 }
 

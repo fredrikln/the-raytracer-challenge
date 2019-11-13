@@ -1,5 +1,5 @@
 use std::ops::{Add, Sub, Neg, Mul, Div};
-use float_cmp::approx_eq;
+use crate::utils::equal;
 
 #[derive(Debug, Copy, Clone)]
 pub struct Vector {
@@ -37,7 +37,7 @@ impl Vector {
 
 impl PartialEq for Vector {
   fn eq(&self, other: &Self) -> bool {
-    approx_eq!(f32, self.x, other.x) && approx_eq!(f32, self.y, other.y) && approx_eq!(f32, self.z, other.z)
+    equal(self.x, other.x) && equal(self.y, other.y) && equal(self.z, other.z)
   }
 }
 
@@ -116,7 +116,7 @@ impl Div<f32> for Vector {
 #[cfg(test)]
 mod tests {
   use crate::vector::Vector;
-  use float_cmp::approx_eq;
+  use crate::utils::equal;
 
   #[test]
   fn can_be_instanciated() {
@@ -211,7 +211,7 @@ mod tests {
     let v3 = Vector { x: 1.0, y: 2.0, z: 3.0 };
     let result: f32 = v3.normalize().magnitude();
 
-    assert!(approx_eq!(f32, result, 1.0));
+    assert!(equal(result, 1.0));
   }
 
   #[test]

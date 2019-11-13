@@ -2,7 +2,7 @@ extern crate image;
 
 use image::{ImageBuffer, Rgb};
 use std::ops::{Add, Mul, Sub};
-use float_cmp::approx_eq;
+use crate::utils::equal;
 
 #[derive(Debug, Clone, Copy)]
 pub struct Color {
@@ -23,7 +23,7 @@ impl Color {
 
 impl PartialEq for Color {
   fn eq(&self, other: &Self) -> bool {
-    approx_eq!(f32, self.r, other.r) && approx_eq!(f32, self.g, other.g) && approx_eq!(f32, self.b, other.b)
+    equal(self.r, other.r) && equal(self.g, other.g) && equal(self.b, other.b)
   }
 }
 

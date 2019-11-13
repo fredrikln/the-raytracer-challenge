@@ -6,7 +6,7 @@ This is my version of the raytracer you get by following the [The Ray Tracer Cha
 
 - [x] Chapter 1 - Tuples, Points, and Vectors
 - [x] Chapter 2 - Drawing on a Canvas
-- [ ] Chapter 3 - Matrices
+- [x] Chapter 3 - Matrices
 - [ ] Chapter 4 - Matrix Transformations
 - [ ] Chapter 5 - Ray-Sphere Intersections
 - [ ] Chapter 6 - Light and Shading

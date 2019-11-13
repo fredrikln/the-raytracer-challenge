@@ -2,6 +2,7 @@ mod point;
 mod vector;
 mod canvas;
 mod matrix;
+mod utils;
 
 use point::Point;
 use vector::Vector;
