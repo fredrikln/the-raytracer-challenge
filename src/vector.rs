@@ -206,7 +206,7 @@ mod tests {
     assert_eq!(v1.normalize(), Vector { x: 1.0, y: 0.0, z: 0.0 });
 
     let v2 = Vector { x: 1.0, y: 2.0, z: 3.0 };
-    assert_eq!(v2.normalize(), Vector { x: 0.26726124, y: 0.5345225, z: 0.8017837 });
+    assert_eq!(v2.normalize(), Vector { x: 0.26726, y: 0.53452, z: 0.80178 });
 
     let v3 = Vector { x: 1.0, y: 2.0, z: 3.0 };
     let result: f32 = v3.normalize().magnitude();
