@@ -9,41 +9,28 @@ use vector::Vector;
 use canvas::{Canvas, Color};
 use matrix::Matrix;
 
-
-#[derive(Debug)]
-struct Environment {
-  gravity: Vector,
-  wind: Vector,
-}
-
-#[derive(Debug)]
-struct Projectile {
-  position: Point,
-  velocity: Vector,
-}
+use uuid::Uuid;
 
 fn main() {
-  let width = 900;
-  let height = 550;
+  let width = 500;
+  let height = 500;
 
   let mut canvas = Canvas::new(width, height);
   let red = Color { r: 1.0, g: 0.0, b: 0.0 };
 
-  let velocity = Vector { x: 1.0, y: 1.8, z: 0.0 };
+  let mut point = Point { x: 0.0, y: 0.0, z: 0.0 };
+  point = point * Matrix::translate(-150.0, 0.0, 0.0);
 
-  let env = Environment { gravity: Vector { x: 0.0, y: -0.1, z: 0.0 }, wind: Vector { x: -0.02, y: 0.0, z: 0.0 } };
-  let mut proj = Projectile { position: Point { x: 0.0, y: 1.0, z: 0.0 }, velocity: velocity.normalize() * 11.25 };
+  for i in 0..12 {
+    let transform = Matrix::rotate_z(i as f32 * (std::f32::consts::PI / 6.0))  ;
+    let new_point = transform * point;
 
-  while proj.position.y >= 0.0 {
-    canvas.set_pixel(proj.position.x as u32, height - (proj.position.y as u32), red);
+    let x: u32 = (new_point.x + width as f32 / 2.0) as u32;
+    let y: u32 = (new_point.y + height as f32 / 2.0) as u32;
 
-    tick(&env, &mut proj);
+    canvas.set_pixel(x, y, red);
   }
 
-  canvas.save("test.png");
-}
-
-fn tick(env: &Environment, proj: &mut Projectile) {
-  proj.position = proj.position + proj.velocity;
-  proj.velocity = proj.velocity + env.gravity + env.wind;
+  let filename: &str = &format!("image-{}.png", Uuid::new_v4());
+  canvas.save(filename);
 }
