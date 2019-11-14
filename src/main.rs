@@ -9,7 +9,7 @@ use vector::Vector;
 use canvas::{Canvas, Color};
 use matrix::Matrix;
 
-use uuid::Uuid;
+use std::time::SystemTime;
 
 fn main() {
   let width = 500;
@@ -31,6 +31,7 @@ fn main() {
     canvas.set_pixel(x, y, red);
   }
 
-  let filename: &str = &format!("image-{}.png", Uuid::new_v4());
+  let time = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).expect("error").as_secs();
+  let filename: &str = &format!("images/image-{}.png", time);
   canvas.save(filename);
 }

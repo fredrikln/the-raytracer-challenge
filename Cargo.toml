@@ -7,6 +7,5 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-float-cmp = "0.5.3"
+#float-cmp = "0.5.3"
 image = "0.22.3"
-uuid = { version = "0.8", features = ["v4"] }
