@@ -60,6 +60,76 @@ impl Matrix {
 
     Some(Matrix { data: inverse(self.data).unwrap() })
   }
+
+  pub fn translate(x: f32, y: f32, z: f32) -> Matrix {
+    Matrix {
+      data: [
+        [1.0, 0.0, 0.0,   x],
+        [0.0, 1.0, 0.0,   y],
+        [0.0, 0.0, 1.0,   z],
+        [0.0, 0.0, 0.0, 1.0],
+      ]
+    }
+  }
+
+  pub fn scale(x: f32, y: f32, z: f32) -> Matrix {
+    Matrix {
+      data: [
+        [  x, 0.0, 0.0, 0.0],
+        [0.0,   y, 0.0, 0.0],
+        [0.0, 0.0,   z, 0.0],
+        [0.0, 0.0, 0.0, 1.0],
+      ]
+    }
+  }
+
+  pub fn scale_linear(i: f32) -> Matrix {
+    Matrix::scale(i, i, i)
+  }
+
+  pub fn rotate_x(r: f32) -> Matrix {
+    Matrix {
+      data: [
+        [1.0,     0.0,      0.0, 0.0],
+        [0.0, r.cos(), -r.sin(), 0.0],
+        [0.0, r.sin(),  r.cos(), 0.0],
+        [0.0,     0.0,      0.0, 1.0]
+      ]
+    }
+  }
+
+  pub fn rotate_y(r: f32) -> Matrix {
+    Matrix {
+      data: [
+        [ r.cos(), 0.0, r.sin(), 0.0],
+        [    0.0,  1.0,     0.0, 0.0],
+        [-r.sin(), 0.0, r.cos(), 0.0],
+        [     0.0, 0.0,     0.0, 1.0]
+      ]
+    }
+  }
+
+  pub fn rotate_z(r: f32) -> Matrix {
+    Matrix {
+      data: [
+        [ r.cos(), -r.sin(), 0.0, 0.0],
+        [ r.sin(),  r.cos(), 0.0, 0.0],
+        [     0.0,      0.0, 1.0, 0.0],
+        [     0.0,      0.0, 0.0, 1.0]
+      ]
+    }
+  }
+
+  pub fn shear(xy: f32, xz: f32, yx: f32, yz: f32, zx: f32, zy: f32) -> Matrix {
+    Matrix {
+      data: [
+        [1.0,  xy,  xz, 0.0],
+        [ yx, 1.0,  yz, 0.0],
+        [ zx,  zy, 1.0, 0.0],
+        [0.0, 0.0, 0.0, 1.0]
+      ]
+    }
+  }
 }
 
 impl PartialEq for Matrix {
@@ -677,5 +747,158 @@ mod tests {
     let c = a * b;
 
     assert_eq!(c * b.inverse().unwrap(), a);
+  }
+
+  #[test]
+  fn multiply_by_translation_matrix() {
+    let transform = Matrix::translate(5.0, -3.0, 2.0);
+    let point = Point { x: -3.0, y: 4.0, z: 5.0 };
+
+    assert_eq!(transform * point, Point { x: 2.0, y: 1.0, z: 7.0 });
+  }
+
+  #[test]
+  fn multiply_by_inverse_of_translation_matrix() {
+    let transform = Matrix::translate(5.0, -3.0, 2.0);
+    let inverse = transform.inverse().unwrap();
+    let point = Point { x: -3.0, y: 4.0, z: 5.0 };
+
+    assert_eq!(inverse * point, Point { x: -8.0, y: 7.0, z: 3.0 });
+  }
+
+  #[test]
+  fn translation_does_not_affect_vectors() {
+    let transform = Matrix::translate(5.0, -3.0, 2.0);
+    let vector = Vector { x: -3.0, y: 4.0, z: 5.0 };
+
+    assert_eq!(transform * vector, Vector { x: -3.0, y: 4.0, z: 5.0 });
+  }
+
+  #[test]
+  fn scaling_applied_to_point() {
+    let transform = Matrix::scale(2.0, 3.0, 4.0);
+    let point = Point { x: -4.0, y: 6.0, z: 8.0 };
+
+    assert_eq!(transform * point, Point { x: -8.0, y: 18.0, z: 32.0 });
+  }
+
+  #[test]
+  fn scaling_applied_to_vector() {
+    let transform = Matrix::scale(2.0, 3.0, 4.0);
+    let vector = Vector { x: -4.0, y: 6.0, z: 8.0 };
+
+    assert_eq!(transform * vector, Vector { x: -8.0, y: 18.0, z: 32.0 });
+  }
+
+  #[test]
+  fn multiply_by_inverse_of_scaling_matrix() {
+    let transform = Matrix::scale(2.0, 3.0, 4.0);
+    let inverse = transform.inverse().unwrap();
+    let vector = Vector { x: -4.0, y: 6.0, z: 8.0 };
+
+    assert_eq!(inverse * vector, Vector { x: -2.0, y: 2.0, z: 2.0 });
+  }
+
+  #[test]
+  fn reflection_is_scaling_by_negative_value() {
+    let transform = Matrix::scale(-1.0, 1.0, 1.0);
+    let point = Point { x: 2.0, y: 3.0, z: 4.0 };
+
+    assert_eq!(transform * point, Point { x: -2.0, y: 3.0, z: 4.0 });
+  }
+
+  #[test]
+  fn rotating_around_x() {
+    let half_quarter = Matrix::rotate_x(std::f32::consts::PI / 4.0);
+    let full_quarter = Matrix::rotate_x(std::f32::consts::PI / 2.0);
+    let point = Point { x: 0.0, y: 1.0, z: 0.0 };
+
+    let two: f32 = 2.0;
+
+    assert_eq!(half_quarter * point, Point { x: 0.0, y: two.sqrt() / 2.0, z: two.sqrt() / 2.0 });
+    assert_eq!(full_quarter * point, Point { x: 0.0, y: 0.0, z: 1.0 });
+  }
+
+  #[test]
+  fn rotating_inverse_around_x() {
+    let half_quarter = Matrix::rotate_x(std::f32::consts::PI / 4.0);
+    let inverse = half_quarter.inverse().unwrap();
+    let point = Point { x: 0.0, y: 1.0, z: 0.0 };
+
+    let two: f32 = 2.0;
+
+    assert_eq!(inverse * point, Point { x: 0.0, y: two.sqrt() / 2.0, z: -(two.sqrt() / 2.0) });
+  }
+
+  #[test]
+  fn rotating_around_y() {
+    let half_quarter = Matrix::rotate_y(std::f32::consts::PI / 4.0);
+    let full_quarter = Matrix::rotate_y(std::f32::consts::PI / 2.0);
+    let point = Point { x: 0.0, y: 0.0, z: 1.0 };
+
+    let two: f32 = 2.0;
+
+    assert_eq!(half_quarter * point, Point { x: two.sqrt() / 2.0, y: 0.0, z: two.sqrt() / 2.0 });
+    assert_eq!(full_quarter * point, Point { x: 1.0, y: 0.0, z: 0.0 });
+  }
+
+  #[test]
+  fn rotating_around_z() {
+    let half_quarter = Matrix::rotate_z(std::f32::consts::PI / 4.0);
+    let full_quarter = Matrix::rotate_z(std::f32::consts::PI / 2.0);
+    let point = Point { x: 0.0, y: 1.0, z: 0.0 };
+
+    let two: f32 = 2.0;
+
+    assert_eq!(half_quarter * point, Point { x: -(two.sqrt() / 2.0), y: two.sqrt() / 2.0, z: 0.0 });
+    assert_eq!(full_quarter * point, Point { x: -1.0, y: 0.0, z: 0.0 });
+  }
+
+  #[test]
+  fn shearing_xyz() {
+    let xy = Matrix::shear(1.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+    let xz = Matrix::shear(0.0, 1.0, 0.0, 0.0, 0.0, 0.0);
+    let yx = Matrix::shear(0.0, 0.0, 1.0, 0.0, 0.0, 0.0);
+    let yz = Matrix::shear(0.0, 0.0, 0.0, 1.0, 0.0, 0.0);
+    let zx = Matrix::shear(0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
+    let zy = Matrix::shear(0.0, 0.0, 0.0, 0.0, 0.0, 1.0);
+
+    let point = Point { x: 2.0, y: 3.0, z: 4.0 };
+
+    assert_eq!(xy * point, Point { x: 5.0, y: 3.0, z: 4.0 });
+    assert_eq!(xz * point, Point { x: 6.0, y: 3.0, z: 4.0 });
+    assert_eq!(yx * point, Point { x: 2.0, y: 5.0, z: 4.0 });
+    assert_eq!(yz * point, Point { x: 2.0, y: 7.0, z: 4.0 });
+    assert_eq!(zx * point, Point { x: 2.0, y: 3.0, z: 6.0 });
+    assert_eq!(zy * point, Point { x: 2.0, y: 3.0, z: 7.0 });
+  }
+
+  #[test]
+  fn chaining_transforms() {
+    let p = Point { x: 1.0, y: 0.0, z: 1.0 };
+    let a = Matrix::rotate_x(std::f32::consts::PI / 2.0);
+    let b = Matrix::scale(5.0, 5.0, 5.0);
+    let c = Matrix::translate(10.0, 5.0, 7.0);
+
+    let p2 = a * p;
+    assert_eq!(p2, Point { x: 1.0, y: -1.0, z: 0.0 });
+
+    let p3 = b * p2;
+    assert_eq!(p3, Point { x: 5.0, y: -5.0, z: 0.0 });
+
+    let p4 = c * p3;
+    assert_eq!(p4, Point { x: 15.0, y: 0.0, z: 7.0 });
+  }
+
+  #[test]
+  fn chaining_must_be_applied_in_reverse_order() {
+    let p = Point { x: 1.0, y: 0.0, z: 1.0 };
+    let a = Matrix::rotate_x(std::f32::consts::PI / 2.0);
+    let b = Matrix::scale(5.0, 5.0, 5.0);
+    let c = Matrix::translate(10.0, 5.0, 7.0);
+
+    let t = c * b * a;
+
+    assert_eq!(t * p, Point { x: 15.0, y: 0.0, z: 7.0 });
   }
 }
