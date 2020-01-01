@@ -33,6 +33,10 @@ impl Vector {
       z: self.x * other.y - self.y * other.x,
     }
   }
+
+  pub fn reflect(&self, normal: Vector) -> Vector {
+    *self - normal * 2.0 * self.dot(&normal)
+  }
 }
 
 impl PartialEq for Vector {
@@ -235,5 +239,25 @@ mod tests {
     let v4 = Vector { x: 0.0, y: 1.0, z: 0.0 };
 
     assert_eq!(v3.cross(&v4), Vector { x: 0.0, y: 0.0, z: 1.0 });
+  }
+
+  #[test]
+  fn reflect_a_vector_approaching_at_45_degrees() {
+    let v = Vector { x: 1.0, y: -1.0, z: 0.0 };
+    let n = Vector { x: 0.0, y: 1.0, z: 0.0 };
+
+    let r = v.reflect(n);
+
+    assert_eq!(r, Vector { x: 1.0, y: 1.0, z: 0.0 })
+  }
+
+  #[test]
+  fn reflect_a_vector_on_slanted_surface() {
+    let v = Vector { x: 0.0, y: -1.0, z: 0.0 };
+    let n = Vector { x: (2.0 as f32).sqrt() / 2.0, y: (2.0 as f32).sqrt() / 2.0, z: 0.0 };
+
+    let r = v.reflect(n);
+
+    assert_eq!(r, Vector { x: 1.0, y: 0.0, z: 0.0 })
   }
 }

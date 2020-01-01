@@ -14,9 +14,9 @@ pub struct Color {
 impl Color {
   fn to_rgb(&self) -> Rgb<u8> {
     Rgb([
-      (self.r * 255 as f32) as u8,
-      (self.g * 255 as f32) as u8,
-      (self.b * 255 as f32) as u8
+      (self.r * 255 as f32).min(255.0) as u8,
+      (self.g * 255 as f32).min(255.0) as u8,
+      (self.b * 255 as f32).min(255.0) as u8
     ])
   }
 }
