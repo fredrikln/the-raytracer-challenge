@@ -8,11 +8,12 @@ mod sphere;
 mod intersection;
 
 use point::Point;
-use vector::Vector;
+// use vector::Vector;
 use canvas::{Canvas, Color};
 use matrix::Matrix;
 use ray::Ray;
 use sphere::Sphere;
+use intersection::Intersection;
 
 use std::time::SystemTime;
 
@@ -46,7 +47,7 @@ fn main() {
 
       let intersections = shape.intersect(ray);
 
-      if intersections.len() > 0 {
+      if Intersection::hit(intersections).is_some() {
         canvas.set_pixel(x, y, red);
       }
     }
