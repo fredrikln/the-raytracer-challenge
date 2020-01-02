@@ -1,4 +1,8 @@
 use crate::sphere::Sphere;
+use crate::ray::Ray;
+use crate::vector::Vector;
+use crate::point::Point;
+
 use std::cmp::Ordering::Equal;
 
 #[derive(Debug, Copy, Clone, PartialEq)]
@@ -19,12 +23,48 @@ impl Intersection<'_> {
 
     Some(copy[0])
   }
+
+  pub fn prepare_computations(&self, ray: Ray) -> Computations {
+    let point = ray.position(self.time);
+
+    let mut normal = self.object.normal(point);
+    let eye_vector = -ray.direction;
+
+    let inside: bool;
+    if normal.dot(&eye_vector) < 0.0 {
+      inside = true;
+      normal = -normal;
+    } else {
+      inside = false
+    }
+
+    Computations {
+      time: self.time,
+      object: self.object,
+      point,
+      eye_vector,
+      normal,
+      inside,
+    }
+  }
+}
+
+pub struct Computations<'a> {
+  pub time: f32,
+  pub object: &'a Sphere,
+  pub point: Point,
+  pub eye_vector: Vector,
+  pub normal: Vector,
+  pub inside: bool,
 }
 
 #[cfg(test)]
 mod tests {
+  use crate::point::Point;
   use crate::sphere::Sphere;
   use crate::intersection::Intersection;
+  use crate::ray::Ray;
+  use crate::vector::Vector;
 
   #[test]
   fn an_intersection_encapsulates_time_and_object() {
@@ -75,5 +115,45 @@ mod tests {
     let intersections = vec![i1, i2, i3, i4];
 
     assert_eq!(Intersection::hit(intersections).unwrap(), i4);
+  }
+
+  #[test]
+  fn precomputing_the_state_of_an_intersection() {
+    let r = Ray { origin: Point { x: 0.0, y: 0.0, z: -5.0 }, direction: Vector { x: 0.0, y: 0.0, z: 1.0 } };
+    let s = Sphere::new();
+    let i = Intersection { time: 4.0, object: &s };
+
+    let comps = i.prepare_computations(r);
+
+    assert_eq!(comps.time, i.time);
+    assert_eq!(comps.object, i.object);
+    assert_eq!(comps.point, Point { x: 0.0, y: 0.0, z: -1.0 });
+    assert_eq!(comps.eye_vector, Vector { x: 0.0, y: 0.0, z: -1.0 });
+    assert_eq!(comps.normal, Vector { x: 0.0, y: 0.0, z: -1.0 });
+  }
+
+  #[test]
+  fn the_hit_when_intersection_occurs_outside() {
+    let r = Ray { origin: Point { x: 0.0, y: 0.0, z: -5.0 }, direction: Vector { x: 0.0, y: 0.0, z: 1.0 } };
+    let s = Sphere::new();
+    let i = Intersection { time: 4.0, object: &s };
+
+    let comps = i.prepare_computations(r);
+
+    assert_eq!(comps.inside, false);
+  }
+
+  #[test]
+  fn the_hit_when_intersection_occurs_inside() {
+    let r = Ray { origin: Point { x: 0.0, y: 0.0, z: 0.0 }, direction: Vector { x: 0.0, y: 0.0, z: 1.0 } };
+    let s = Sphere::new();
+    let i = Intersection { time: 1.0, object: &s };
+
+    let comps = i.prepare_computations(r);
+
+    assert_eq!(comps.inside, true);
+    assert_eq!(comps.point, Point { x: 0.0, y: 0.0, z: 1.0 });
+    assert_eq!(comps.eye_vector, Vector { x: 0.0, y: 0.0, z: -1.0 });
+    assert_eq!(comps.normal, Vector { x: 0.0, y: 0.0, z: -1.0 });
   }
 }

@@ -5,7 +5,7 @@ use crate::matrix::Matrix;
 use crate::vector::Vector;
 use crate::material::Material;
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Copy, Clone)]
 pub struct Sphere {
   pub transform: Matrix,
   pub material: Material,

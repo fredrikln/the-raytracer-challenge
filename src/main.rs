@@ -8,70 +8,79 @@ mod sphere;
 mod intersection;
 mod point_light;
 mod material;
+mod world;
+mod camera;
 
 use point::Point;
-// use vector::Vector;
-use canvas::{Canvas, Color};
+use vector::Vector;
+use canvas::Color;
 use matrix::Matrix;
-use ray::Ray;
 use sphere::Sphere;
-use intersection::Intersection;
 use material::Material;
 use point_light::PointLight;
+use camera::Camera;
+use world::World;
 
 use std::time::SystemTime;
 
 fn main() {
-  let canvas_size = 200;
+  let mut floor = Sphere::new();
+  floor.transform = Matrix::scale(10.0, 0.01, 10.0);
+  let mut m1 = Material::new();
+  m1.color = Color { r: 1.0, g: 0.9, b: 0.9 };
+  m1.specular = 0.0;
+  floor.material = m1;
 
-  let mut canvas = Canvas::new(canvas_size, canvas_size);
+  let mut left_wall = Sphere::new();
+  left_wall.transform = Matrix::translate(0.0, 0.0, 5.0) * Matrix::rotate_y(-std::f32::consts::PI / 4.0) * Matrix::rotate_x(std::f32::consts::PI / 2.0) * Matrix::scale(10.0, 0.01, 10.0);
+  left_wall.material = m1;
 
-  let ray_origin = Point { x: 0.0, y: 0.0, z: -5.0 };
-  let wall_z = 10.0;
+  let mut right_wall = Sphere::new();
+  right_wall.transform = Matrix::translate(0.0, 0.0, 5.0) * Matrix::rotate_y(std::f32::consts::PI / 4.0) * Matrix::rotate_x(std::f32::consts::PI / 2.0) * Matrix::scale(10.0, 0.01, 10.0);
+  right_wall.material = m1;
 
-  let wall_size = 7.0;
+  let mut middle = Sphere::new();
+  middle.transform = Matrix::translate(-0.5, 1.0, 0.5);
+  let mut m2 = Material::new();
+  m2.color = Color { r: 0.1, g: 1.0, b: 0.5 };
+  m2.diffuse = 0.7;
+  m2.specular = 0.3;
+  middle.material = m2;
 
-  let pixel_size = wall_size / canvas_size as f32;
-  let half = wall_size / 2.0;
+  let mut right = Sphere::new();
+  right.transform = Matrix::translate(1.0, 0.5, -0.5) * Matrix::scale_linear(0.5);
+  let mut m3 = Material::new();
+  m3.color = Color { r: 0.5, g: 1.0, b: 0.1 };
+  m3.diffuse = 0.7;
+  m3.specular = 0.3;
+  right.material = m3;
 
-  let mut shape = Sphere::new();
-  shape.material.color = Color { r: 1.0, g: 0.2, b: 1.0 };
+  let mut left = Sphere::new();
+  left.transform = Matrix::translate(-1.5, 0.33, -0.75) * Matrix::scale_linear(0.33);
+  let mut m4 = Material::new();
+  m4.color = Color { r: 1.0, g: 0.8, b: 0.1 };
+  m4.diffuse = 0.7;
+  m4.specular = 0.3;
+  left.material = m4;
 
-  // let transform = Matrix::shear(0.5, 0.0, 0.0, 0.0, 0.0, 0.0) * Matrix::scale(0.5, 1.0, 1.0);
-  // let transform = Matrix::scale(1.0, 0.5, 1.0);
-  // shape.set_transform(transform);
+  let light = PointLight {
+    position: Point { x: -10.0, y: 10.0, z: -10.0 },
+    intensity: Color { r: 1.0, g: 1.0, b: 1.0 }
+  };
 
-  let light_position = Point { x: -10.0, y: 10.0, z: -10.0 };
-  let light_color = Color { r: 1.0, g: 1.0, b: 1.0 };
-  let light = PointLight { position: light_position, intensity: light_color };
+  let world = World {
+    objects: vec![floor, left_wall, right_wall, middle, right, left],
+    lights: vec![light]
+  };
 
-  for y in 0..canvas_size {
-    let world_y = half - pixel_size * y as f32;
+  let mut camera = Camera::new(100, 50, std::f32::consts::PI / 3.0);
+  camera.transform = Camera::view_transform(
+    Point { x: 0.0, y: 1.5, z: -5.0 },
+    Point { x: 0.0, y: 1.0, z: 0.0 },
+    Vector { x: 0.0, y: 1.0, z: 0.0 }
+  );
 
-    for x in 0..canvas_size {
-      let world_x = -half + pixel_size * x as f32;
-
-      let position = Point { x: world_x, y: world_y, z: wall_z };
-
-      let ray = Ray { origin: ray_origin, direction: (position - ray_origin).normalize() };
-
-      let intersections = shape.intersect(ray);
-
-      let hit = Intersection::hit(intersections);
-      if hit.is_some() {
-        let unwrapped_hit = hit.unwrap();
-
-        let point = ray.position(unwrapped_hit.time);
-        let normal = unwrapped_hit.object.normal(point);
-        let eye_vector = -ray.direction;
-        let material = unwrapped_hit.object.material;
-
-        let color = material.lighting(light, point, eye_vector, normal);
-
-        canvas.set_pixel(x, y, color);
-      }
-    }
-  }
+  let canvas = camera.render(world);
 
   let time = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).expect("error").as_secs();
   let filename: &str = &format!("images/image-{}.png", time);

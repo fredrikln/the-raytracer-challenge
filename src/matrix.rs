@@ -5,7 +5,7 @@ use crate::utils::equal;
 
 #[derive(Debug, Copy, Clone)]
 pub struct Matrix {
-  data: [[f32; 4]; 4],
+  pub data: [[f32; 4]; 4],
 }
 
 impl Matrix {

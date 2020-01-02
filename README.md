@@ -10,7 +10,7 @@ This is my version of the raytracer you get by following the [The Ray Tracer Cha
 - [x] Chapter 4 - Matrix Transformations
 - [x] Chapter 5 - Ray-Sphere Intersections
 - [x] Chapter 6 - Light and Shading
-- [ ] Chapter 7 - Making a Scene
+- [x] Chapter 7 - Making a Scene
 - [ ] Chapter 8 - Shadows
 - [ ] Chapter 9 - Planes
 - [ ] Chapter 10 - Patterns

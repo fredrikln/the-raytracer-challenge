@@ -97,9 +97,9 @@ impl Canvas {
     let pixel = self.buffer.get_pixel(x, y);
 
     Color {
-      r: (pixel[0] / 255) as f32,
-      g: (pixel[1] / 255) as f32,
-      b: (pixel[2] / 255) as f32,
+      r: (pixel[0] as f32 / 255.0),
+      g: (pixel[1] as f32 / 255.0),
+      b: (pixel[2] as f32 / 255.0),
     }
   }
 
