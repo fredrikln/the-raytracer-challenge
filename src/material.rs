@@ -6,10 +6,10 @@ use crate::point_light::PointLight;
 #[derive(PartialEq, Debug, Copy, Clone)]
 pub struct Material {
   pub color: Color,
-  pub ambient: f32,
-  pub diffuse: f32,
-  pub specular: f32,
-  pub shininess: f32,
+  pub ambient: f64,
+  pub diffuse: f64,
+  pub specular: f64,
+  pub shininess: f64,
 }
 
 impl Material {
@@ -97,7 +97,7 @@ mod tests {
   fn eye_between_light_and_surface_eye_offset_45_degrees() {
     let material = Material::new();
     let position = Point { x: 0.0, y: 0.0, z: 0.0 };
-    let eye_vector = Vector { x: 0.0, y: (2.0 as f32).sqrt() / 2.0, z: -((2.0 as f32).sqrt() / 2.0) };
+    let eye_vector = Vector { x: 0.0, y: (2.0 as f64).sqrt() / 2.0, z: -((2.0 as f64).sqrt() / 2.0) };
     let normal = Vector { x: 0.0, y: 0.0, z: -1.0 };
     let light = PointLight { intensity: Color { r: 1.0, g: 1.0, b: 1.0 }, position: Point { x: 0.0, y: 0.0, z: -10.0 } };
 
@@ -123,13 +123,13 @@ mod tests {
   fn lighting_in_path_with_reflecting_vector() {
     let material = Material::new();
     let position = Point { x: 0.0, y: 0.0, z: 0.0 };
-    let eye_vector = Vector { x: 0.0, y: -((2.0 as f32).sqrt() / 2.0), z: -((2.0 as f32).sqrt() / 2.0) };
+    let eye_vector = Vector { x: 0.0, y: -((2.0 as f64).sqrt() / 2.0), z: -((2.0 as f64).sqrt() / 2.0) };
     let normal = Vector { x: 0.0, y: 0.0, z: -1.0 };
     let light = PointLight { intensity: Color { r: 1.0, g: 1.0, b: 1.0 }, position: Point { x: 0.0, y: 10.0, z: -10.0 } };
 
     let light = material.lighting(light, position, eye_vector, normal, false);
 
-    assert_eq!(light, Color { r: 1.6363853, g: 1.6363853, b: 1.6363853 });
+    assert_eq!(light, Color { r: 1.6363961, g: 1.6363961, b: 1.6363961 });
   }
 
   #[test]

@@ -190,15 +190,15 @@ mod tests {
   #[test]
   fn normal_at_a_nonaxial_point() {
     let s = Sphere::new();
-    let n = s.normal(Point { x: (3.0 as f32).sqrt() / 3.0, y: (3.0 as f32).sqrt() / 3.0, z: (3.0 as f32).sqrt() / 3.0 });
+    let n = s.normal(Point { x: (3.0 as f64).sqrt() / 3.0, y: (3.0 as f64).sqrt() / 3.0, z: (3.0 as f64).sqrt() / 3.0 });
 
-    assert_eq!(n, Vector { x: (3.0 as f32).sqrt() / 3.0, y: (3.0 as f32).sqrt() / 3.0, z: (3.0 as f32).sqrt() / 3.0 });
+    assert_eq!(n, Vector { x: (3.0 as f64).sqrt() / 3.0, y: (3.0 as f64).sqrt() / 3.0, z: (3.0 as f64).sqrt() / 3.0 });
   }
 
   #[test]
   fn normal_is_normalized() {
     let s = Sphere::new();
-    let n = s.normal(Point { x: (3.0 as f32).sqrt() / 3.0, y: (3.0 as f32).sqrt() / 3.0, z: (3.0 as f32).sqrt() / 3.0 });
+    let n = s.normal(Point { x: (3.0 as f64).sqrt() / 3.0, y: (3.0 as f64).sqrt() / 3.0, z: (3.0 as f64).sqrt() / 3.0 });
 
     assert_eq!(n, n.normalize());
   }
@@ -216,10 +216,10 @@ mod tests {
   #[test]
   fn computing_normal_of_transformed_sphere() {
     let mut s = Sphere::new();
-    let transform = Matrix::scale(1.0, 0.5, 1.0) * Matrix::rotate_z(std::f32::consts::PI / 5.0);
+    let transform = Matrix::scale(1.0, 0.5, 1.0) * Matrix::rotate_z(std::f64::consts::PI / 5.0);
     s.set_transform(transform);
 
-    let n = s.normal(Point { x: 0.0, y: (2.0 as f32).sqrt() / 2.0, z: -((2.0 as f32).sqrt() / 2.0) });
+    let n = s.normal(Point { x: 0.0, y: (2.0 as f64).sqrt() / 2.0, z: -((2.0 as f64).sqrt() / 2.0) });
 
     assert_eq!(n, Vector { x: 0.0, y: 0.97014, z: -0.24254 });
   }

@@ -8,7 +8,7 @@ use std::cmp::Ordering::Equal;
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Intersection<'a> {
-  pub time: f32,
+  pub time: f64,
   pub object: &'a Sphere
 }
 
@@ -39,7 +39,7 @@ impl Intersection<'_> {
       inside = false
     }
 
-    let over_point = point + normal * EPSILON * 150.0;
+    let over_point = point + normal * EPSILON;
 
     Computations {
       time: self.time,
@@ -54,7 +54,7 @@ impl Intersection<'_> {
 }
 
 pub struct Computations<'a> {
-  pub time: f32,
+  pub time: f64,
   pub object: &'a Sphere,
   pub point: Point,
   pub eye_vector: Vector,

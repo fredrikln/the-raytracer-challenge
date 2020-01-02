@@ -3,13 +3,13 @@ use crate::utils::equal;
 
 #[derive(Debug, Copy, Clone)]
 pub struct Vector {
-  pub x: f32,
-  pub y: f32,
-  pub z: f32,
+  pub x: f64,
+  pub y: f64,
+  pub z: f64,
 }
 
 impl Vector {
-  pub fn magnitude(&self) -> f32 {
+  pub fn magnitude(&self) -> f64 {
     (self.x * self.x + self.y * self.y + self.z * self.z).sqrt()
   }
 
@@ -22,7 +22,7 @@ impl Vector {
     }
   }
 
-  pub fn dot(&self, other: &Self) -> f32 {
+  pub fn dot(&self, other: &Self) -> f64 {
     self.x * other.x + self.y * other.y + self.z * other.z
   }
 
@@ -81,10 +81,10 @@ impl Neg for Vector {
   }
 }
 
-impl Mul<f32> for Vector {
+impl Mul<f64> for Vector {
   type Output = Vector;
 
-  fn mul(self, rhs: f32) -> Vector {
+  fn mul(self, rhs: f64) -> Vector {
     Vector {
       x: self.x * rhs,
       y: self.y * rhs,
@@ -105,10 +105,10 @@ impl Mul<Vector> for Vector {
   }
 }
 
-impl Div<f32> for Vector {
+impl Div<f64> for Vector {
   type Output = Vector;
 
-  fn div(self, rhs: f32) -> Vector {
+  fn div(self, rhs: f64) -> Vector {
     Vector {
       x: self.x / rhs,
       y: self.y / rhs,
@@ -196,11 +196,11 @@ mod tests {
     assert_eq!(v3.magnitude(), 1.0);
 
     let v4 = Vector { x: 1.0, y: 2.0, z: 3.0 };
-    let result: f32 = 14.0;
+    let result: f64 = 14.0;
     assert_eq!(v4.magnitude(), result.sqrt());
 
     let v5 = Vector { x: -1.0, y: -2.0, z: -3.0 };
-    let result2: f32 = 14.0;
+    let result2: f64 = 14.0;
     assert_eq!(v5.magnitude(), result2.sqrt());
   }
 
@@ -213,7 +213,7 @@ mod tests {
     assert_eq!(v2.normalize(), Vector { x: 0.26726, y: 0.53452, z: 0.80178 });
 
     let v3 = Vector { x: 1.0, y: 2.0, z: 3.0 };
-    let result: f32 = v3.normalize().magnitude();
+    let result: f64 = v3.normalize().magnitude();
 
     assert!(equal(result, 1.0));
   }
@@ -254,7 +254,7 @@ mod tests {
   #[test]
   fn reflect_a_vector_on_slanted_surface() {
     let v = Vector { x: 0.0, y: -1.0, z: 0.0 };
-    let n = Vector { x: (2.0 as f32).sqrt() / 2.0, y: (2.0 as f32).sqrt() / 2.0, z: 0.0 };
+    let n = Vector { x: (2.0 as f64).sqrt() / 2.0, y: (2.0 as f64).sqrt() / 2.0, z: 0.0 };
 
     let r = v.reflect(n);
 

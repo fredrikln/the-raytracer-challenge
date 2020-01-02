@@ -5,7 +5,7 @@ use crate::utils::equal;
 
 #[derive(Debug, Copy, Clone)]
 pub struct Matrix {
-  pub data: [[f32; 4]; 4],
+  pub data: [[f64; 4]; 4],
 }
 
 impl Matrix {
@@ -43,11 +43,11 @@ impl Matrix {
     m
   }
 
-  pub fn cofactor(&self, row: usize, col: usize) -> f32 {
+  pub fn cofactor(&self, row: usize, col: usize) -> f64 {
     cofactor4(self.data, row, col)
   }
 
-  pub fn determinant(&self) -> f32 {
+  pub fn determinant(&self) -> f64 {
     determinant4(self.data)
   }
 
@@ -61,7 +61,7 @@ impl Matrix {
     Some(Matrix { data: inverse(self.data).unwrap() })
   }
 
-  pub fn translate(x: f32, y: f32, z: f32) -> Matrix {
+  pub fn translate(x: f64, y: f64, z: f64) -> Matrix {
     Matrix {
       data: [
         [1.0, 0.0, 0.0,   x],
@@ -72,7 +72,7 @@ impl Matrix {
     }
   }
 
-  pub fn scale(x: f32, y: f32, z: f32) -> Matrix {
+  pub fn scale(x: f64, y: f64, z: f64) -> Matrix {
     Matrix {
       data: [
         [  x, 0.0, 0.0, 0.0],
@@ -83,11 +83,11 @@ impl Matrix {
     }
   }
 
-  pub fn scale_linear(i: f32) -> Matrix {
+  pub fn scale_linear(i: f64) -> Matrix {
     Matrix::scale(i, i, i)
   }
 
-  pub fn rotate_x(r: f32) -> Matrix {
+  pub fn rotate_x(r: f64) -> Matrix {
     Matrix {
       data: [
         [1.0,     0.0,      0.0, 0.0],
@@ -98,7 +98,7 @@ impl Matrix {
     }
   }
 
-  pub fn rotate_y(r: f32) -> Matrix {
+  pub fn rotate_y(r: f64) -> Matrix {
     Matrix {
       data: [
         [ r.cos(), 0.0, r.sin(), 0.0],
@@ -109,7 +109,7 @@ impl Matrix {
     }
   }
 
-  pub fn rotate_z(r: f32) -> Matrix {
+  pub fn rotate_z(r: f64) -> Matrix {
     Matrix {
       data: [
         [ r.cos(), -r.sin(), 0.0, 0.0],
@@ -120,7 +120,7 @@ impl Matrix {
     }
   }
 
-  pub fn shear(xy: f32, xz: f32, yx: f32, yz: f32, zx: f32, zy: f32) -> Matrix {
+  pub fn shear(xy: f64, xz: f64, yx: f64, yz: f64, zx: f64, zy: f64) -> Matrix {
     Matrix {
       data: [
         [1.0,  xy,  xz, 0.0],
@@ -206,25 +206,25 @@ impl Mul<Matrix> for Vector {
 }
 
 impl Index<usize> for Matrix {
-  type Output = [f32; 4];
+  type Output = [f64; 4];
 
-  fn index(&self, idx: usize) -> &[f32; 4] {
+  fn index(&self, idx: usize) -> &[f64; 4] {
     &self.data[idx]
   }
 }
 
 impl IndexMut<usize> for Matrix {
-  fn index_mut(&mut self, idx: usize) -> &mut [f32; 4] {
+  fn index_mut(&mut self, idx: usize) -> &mut [f64; 4] {
     &mut self.data[idx]
   }
 }
 
-fn determinant(matrix: [[f32; 2]; 2]) -> f32 {
+fn determinant(matrix: [[f64; 2]; 2]) -> f64 {
   return (matrix[0][0] * matrix[1][1]) - (matrix[0][1] * matrix[1][0]);
 }
 
-fn submatrix3(matrix: [[f32; 3]; 3], row: usize, col: usize) -> [[f32; 2]; 2] {
-  let mut out: [[f32; 2]; 2] = [[0.0; 2]; 2];
+fn submatrix3(matrix: [[f64; 3]; 3], row: usize, col: usize) -> [[f64; 2]; 2] {
+  let mut out: [[f64; 2]; 2] = [[0.0; 2]; 2];
 
   let mut row_counter = 0;
   for i in 0..3 {
@@ -245,8 +245,8 @@ fn submatrix3(matrix: [[f32; 3]; 3], row: usize, col: usize) -> [[f32; 2]; 2] {
   return out;
 }
 
-fn submatrix4(matrix: [[f32; 4]; 4], row: usize, col: usize) -> [[f32; 3]; 3] {
-  let mut out: [[f32; 3]; 3] = [[0.0; 3]; 3];
+fn submatrix4(matrix: [[f64; 4]; 4], row: usize, col: usize) -> [[f64; 3]; 3] {
+  let mut out: [[f64; 3]; 3] = [[0.0; 3]; 3];
 
   let mut row_counter = 0;
   for i in 0..4 {
@@ -267,11 +267,11 @@ fn submatrix4(matrix: [[f32; 4]; 4], row: usize, col: usize) -> [[f32; 3]; 3] {
   return out;
 }
 
-fn minor3(matrix: [[f32; 3]; 3], row: usize, col: usize) -> f32 {
+fn minor3(matrix: [[f64; 3]; 3], row: usize, col: usize) -> f64 {
   determinant(submatrix3(matrix, row, col))
 }
 
-fn cofactor3(matrix: [[f32; 3]; 3], row: usize, col: usize) -> f32 {
+fn cofactor3(matrix: [[f64; 3]; 3], row: usize, col: usize) -> f64 {
   let mut minor = minor3(matrix, row, col);
 
   if (row+col) % 2 == 1 { minor *= -1.0; }
@@ -279,7 +279,7 @@ fn cofactor3(matrix: [[f32; 3]; 3], row: usize, col: usize) -> f32 {
   minor
 }
 
-fn determinant3(matrix: [[f32; 3]; 3]) -> f32 {
+fn determinant3(matrix: [[f64; 3]; 3]) -> f64 {
   let mut out = 0.0;
   for i in 0..3 {
     out += cofactor3(matrix, 0, i) * matrix[0][i];
@@ -288,11 +288,11 @@ fn determinant3(matrix: [[f32; 3]; 3]) -> f32 {
   out
 }
 
-fn minor4(matrix: [[f32; 4]; 4], row: usize, col: usize) -> f32 {
+fn minor4(matrix: [[f64; 4]; 4], row: usize, col: usize) -> f64 {
   determinant3(submatrix4(matrix, row, col))
 }
 
-fn cofactor4(matrix: [[f32; 4]; 4], row: usize, col: usize) -> f32 {
+fn cofactor4(matrix: [[f64; 4]; 4], row: usize, col: usize) -> f64 {
   let mut minor = minor4(matrix, row, col);
 
   if (row+col) % 2 == 1 { minor *= -1.0; }
@@ -300,7 +300,7 @@ fn cofactor4(matrix: [[f32; 4]; 4], row: usize, col: usize) -> f32 {
   minor
 }
 
-fn determinant4(matrix: [[f32; 4]; 4]) -> f32 {
+fn determinant4(matrix: [[f64; 4]; 4]) -> f64 {
   let mut out = 0.0;
   for i in 0..4 {
     out += cofactor4(matrix, 0, i) * matrix[0][i];
@@ -309,14 +309,14 @@ fn determinant4(matrix: [[f32; 4]; 4]) -> f32 {
   out
 }
 
-fn invertible(matrix: [[f32; 4]; 4]) -> bool {
+fn invertible(matrix: [[f64; 4]; 4]) -> bool {
   determinant4(matrix) != 0.0
 }
 
-fn inverse(matrix: [[f32; 4]; 4]) -> Option<[[f32; 4]; 4]> {
+fn inverse(matrix: [[f64; 4]; 4]) -> Option<[[f64; 4]; 4]> {
   if !invertible(matrix) { return None; }
 
-  let mut out: [[f32; 4]; 4] = [[0.0; 4]; 4];
+  let mut out: [[f64; 4]; 4] = [[0.0; 4]; 4];
   let determinant = determinant4(matrix);
 
   for i in 0..4 {
@@ -336,8 +336,8 @@ fn inverse(matrix: [[f32; 4]; 4]) -> Option<[[f32; 4]; 4]> {
   Some(out)
 }
 
-fn transpose(matrix: [[f32; 4]; 4]) -> [[f32; 4]; 4] {
-  let mut out: [[f32; 4]; 4] = [[0.0; 4]; 4];
+fn transpose(matrix: [[f64; 4]; 4]) -> [[f64; 4]; 4] {
+  let mut out: [[f64; 4]; 4] = [[0.0; 4]; 4];
 
   for row in 0..4 {
     for col in 0..4 {
@@ -809,11 +809,11 @@ mod tests {
 
   #[test]
   fn rotating_around_x() {
-    let half_quarter = Matrix::rotate_x(std::f32::consts::PI / 4.0);
-    let full_quarter = Matrix::rotate_x(std::f32::consts::PI / 2.0);
+    let half_quarter = Matrix::rotate_x(std::f64::consts::PI / 4.0);
+    let full_quarter = Matrix::rotate_x(std::f64::consts::PI / 2.0);
     let point = Point { x: 0.0, y: 1.0, z: 0.0 };
 
-    let two: f32 = 2.0;
+    let two: f64 = 2.0;
 
     assert_eq!(half_quarter * point, Point { x: 0.0, y: two.sqrt() / 2.0, z: two.sqrt() / 2.0 });
     assert_eq!(full_quarter * point, Point { x: 0.0, y: 0.0, z: 1.0 });
@@ -821,22 +821,22 @@ mod tests {
 
   #[test]
   fn rotating_inverse_around_x() {
-    let half_quarter = Matrix::rotate_x(std::f32::consts::PI / 4.0);
+    let half_quarter = Matrix::rotate_x(std::f64::consts::PI / 4.0);
     let inverse = half_quarter.inverse().unwrap();
     let point = Point { x: 0.0, y: 1.0, z: 0.0 };
 
-    let two: f32 = 2.0;
+    let two: f64 = 2.0;
 
     assert_eq!(inverse * point, Point { x: 0.0, y: two.sqrt() / 2.0, z: -(two.sqrt() / 2.0) });
   }
 
   #[test]
   fn rotating_around_y() {
-    let half_quarter = Matrix::rotate_y(std::f32::consts::PI / 4.0);
-    let full_quarter = Matrix::rotate_y(std::f32::consts::PI / 2.0);
+    let half_quarter = Matrix::rotate_y(std::f64::consts::PI / 4.0);
+    let full_quarter = Matrix::rotate_y(std::f64::consts::PI / 2.0);
     let point = Point { x: 0.0, y: 0.0, z: 1.0 };
 
-    let two: f32 = 2.0;
+    let two: f64 = 2.0;
 
     assert_eq!(half_quarter * point, Point { x: two.sqrt() / 2.0, y: 0.0, z: two.sqrt() / 2.0 });
     assert_eq!(full_quarter * point, Point { x: 1.0, y: 0.0, z: 0.0 });
@@ -844,11 +844,11 @@ mod tests {
 
   #[test]
   fn rotating_around_z() {
-    let half_quarter = Matrix::rotate_z(std::f32::consts::PI / 4.0);
-    let full_quarter = Matrix::rotate_z(std::f32::consts::PI / 2.0);
+    let half_quarter = Matrix::rotate_z(std::f64::consts::PI / 4.0);
+    let full_quarter = Matrix::rotate_z(std::f64::consts::PI / 2.0);
     let point = Point { x: 0.0, y: 1.0, z: 0.0 };
 
-    let two: f32 = 2.0;
+    let two: f64 = 2.0;
 
     assert_eq!(half_quarter * point, Point { x: -(two.sqrt() / 2.0), y: two.sqrt() / 2.0, z: 0.0 });
     assert_eq!(full_quarter * point, Point { x: -1.0, y: 0.0, z: 0.0 });
@@ -876,7 +876,7 @@ mod tests {
   #[test]
   fn chaining_transforms() {
     let p = Point { x: 1.0, y: 0.0, z: 1.0 };
-    let a = Matrix::rotate_x(std::f32::consts::PI / 2.0);
+    let a = Matrix::rotate_x(std::f64::consts::PI / 2.0);
     let b = Matrix::scale(5.0, 5.0, 5.0);
     let c = Matrix::translate(10.0, 5.0, 7.0);
 
@@ -893,7 +893,7 @@ mod tests {
   #[test]
   fn chaining_must_be_applied_in_reverse_order() {
     let p = Point { x: 1.0, y: 0.0, z: 1.0 };
-    let a = Matrix::rotate_x(std::f32::consts::PI / 2.0);
+    let a = Matrix::rotate_x(std::f64::consts::PI / 2.0);
     let b = Matrix::scale(5.0, 5.0, 5.0);
     let c = Matrix::translate(10.0, 5.0, 7.0);
 

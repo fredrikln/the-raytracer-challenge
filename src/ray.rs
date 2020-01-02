@@ -10,7 +10,7 @@ pub struct Ray {
 }
 
 impl Ray {
-  pub fn position(&self, time: f32) -> Point {
+  pub fn position(&self, time: f64) -> Point {
     Point {
       x: self.origin.x + (self.direction.x * time),
       y: self.origin.y + (self.direction.y * time),

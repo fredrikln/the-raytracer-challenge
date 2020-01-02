@@ -9,19 +9,19 @@ use crate::world::World;
 pub struct Camera {
   pub hsize: u32,
   pub vsize: u32,
-  pub fov: f32,
+  pub fov: f64,
   pub transform: Matrix,
-  pub pixel_size: f32,
-  pub half_height: f32,
-  pub half_width: f32,
+  pub pixel_size: f64,
+  pub half_height: f64,
+  pub half_width: f64,
 }
 
 impl Camera {
-  pub fn new(hsize: u32, vsize: u32, fov: f32) -> Camera {
+  pub fn new(hsize: u32, vsize: u32, fov: f64) -> Camera {
     let half_view = (fov / 2.0).tan();
-    let aspect = (hsize as f32 / vsize as f32) as f32;
-    let half_width: f32;
-    let half_height: f32;
+    let aspect = (hsize as f64 / vsize as f64) as f64;
+    let half_width: f64;
+    let half_height: f64;
 
     if aspect >= 1.0 {
       half_width = half_view;
@@ -31,7 +31,7 @@ impl Camera {
       half_height = half_view;
     }
 
-    let pixel_size = (half_width * 2.0) / hsize as f32;
+    let pixel_size = (half_width * 2.0) / hsize as f64;
 
     Camera {
       hsize,
@@ -45,8 +45,8 @@ impl Camera {
   }
 
   pub fn ray_for_pixel(&self, px: u32, py: u32) -> Ray {
-    let x_offset = (px as f32 + 0.5) * self.pixel_size;
-    let y_offset = (py as f32 + 0.5) * self.pixel_size;
+    let x_offset = (px as f64 + 0.5) * self.pixel_size;
+    let y_offset = (py as f64 + 0.5) * self.pixel_size;
 
     let world_x = self.half_width - x_offset;
     let world_y = self.half_height - y_offset;
@@ -102,6 +102,7 @@ mod tests {
   use crate::point::Point;
   use crate::world::World;
   use crate::canvas::Color;
+  use crate::utils::equal;
 
   #[test]
   fn transformation_matrix_for_default_orientation() {
@@ -158,13 +159,13 @@ mod tests {
   fn constructing_a_camera() {
     let hsize = 160;
     let vsize = 120;
-    let fov = std::f32::consts::PI / 2.0;
+    let fov = std::f64::consts::PI / 2.0;
 
     let c = Camera::new(hsize, vsize, fov);
 
     assert_eq!(c.hsize, 160);
     assert_eq!(c.vsize, 120);
-    assert_eq!(c.fov, std::f32::consts::PI / 2.0);
+    assert_eq!(c.fov, std::f64::consts::PI / 2.0);
     assert_eq!(c.transform, Matrix::identity());
   }
 
@@ -172,27 +173,27 @@ mod tests {
   fn pixel_size_for_horizontal_canvas() {
     let hsize = 200;
     let vsize = 125;
-    let fov = std::f32::consts::PI / 2.0;
+    let fov = std::f64::consts::PI / 2.0;
 
     let c = Camera::new(hsize, vsize, fov);
 
-    assert_eq!(c.pixel_size, 0.01);
+    assert!(equal(c.pixel_size, 0.01));
   }
 
   #[test]
   fn pixel_size_for_vertical_canvas() {
     let hsize = 125;
     let vsize = 200;
-    let fov = std::f32::consts::PI / 2.0;
+    let fov = std::f64::consts::PI / 2.0;
 
     let c = Camera::new(hsize, vsize, fov);
 
-    assert_eq!(c.pixel_size, 0.01);
+    assert!(equal(c.pixel_size, 0.01));
   }
 
   #[test]
   fn ray_through_center_of_canvas() {
-    let c = Camera::new(201, 101, std::f32::consts::PI / 2.0);
+    let c = Camera::new(201, 101, std::f64::consts::PI / 2.0);
     let r = c.ray_for_pixel(100, 50);
 
     assert_eq!(r.origin, Point { x: 0.0, y: 0.0, z: 0.0 });
@@ -201,7 +202,7 @@ mod tests {
 
   #[test]
   fn ray_through_corner_of_canvas() {
-    let c = Camera::new(201, 101, std::f32::consts::PI / 2.0);
+    let c = Camera::new(201, 101, std::f64::consts::PI / 2.0);
     let r = c.ray_for_pixel(0, 0);
 
     assert_eq!(r.origin, Point { x: 0.0, y: 0.0, z: 0.0 });
@@ -210,18 +211,18 @@ mod tests {
 
   #[test]
   fn ray_when_camera_is_transformed() {
-    let mut c = Camera::new(201, 101, std::f32::consts::PI / 2.0);
-    c.transform = Matrix::rotate_y(std::f32::consts::PI / 4.0) * Matrix::translate(0.0, -2.0, 5.0);
+    let mut c = Camera::new(201, 101, std::f64::consts::PI / 2.0);
+    c.transform = Matrix::rotate_y(std::f64::consts::PI / 4.0) * Matrix::translate(0.0, -2.0, 5.0);
     let r = c.ray_for_pixel(100, 50);
 
     assert_eq!(r.origin, Point { x: 0.0, y: 2.0, z: -5.0 });
-    assert_eq!(r.direction, Vector { x: ((2.0 as f32).sqrt() / 2.0), y: 0.0, z: -((2.0 as f32).sqrt() / 2.0) });
+    assert_eq!(r.direction, Vector { x: ((2.0 as f64).sqrt() / 2.0), y: 0.0, z: -((2.0 as f64).sqrt() / 2.0) });
   }
 
   #[test]
   fn render_world_with_camera() {
     let w = World::default();
-    let mut c = Camera::new(11, 11, std::f32::consts::PI / 2.0);
+    let mut c = Camera::new(11, 11, std::f64::consts::PI / 2.0);
 
     let from = Point { x: 0.0, y: 0.0, z: -5.0 };
     let to = Point { x: 0.0, y: 0.0, z: 0.0 };

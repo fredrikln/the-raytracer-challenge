@@ -6,17 +6,17 @@ use crate::utils::equal;
 
 #[derive(Debug, Clone, Copy)]
 pub struct Color {
-  pub r: f32,
-  pub g: f32,
-  pub b: f32,
+  pub r: f64,
+  pub g: f64,
+  pub b: f64,
 }
 
 impl Color {
   fn to_rgb(&self) -> Rgb<u8> {
     Rgb([
-      (self.r * 255 as f32).min(255.0) as u8,
-      (self.g * 255 as f32).min(255.0) as u8,
-      (self.b * 255 as f32).min(255.0) as u8
+      (self.r * 255 as f64).min(255.0) as u8,
+      (self.g * 255 as f64).min(255.0) as u8,
+      (self.b * 255 as f64).min(255.0) as u8
     ])
   }
 }
@@ -63,10 +63,10 @@ impl Mul<Color> for Color {
   }
 }
 
-impl Mul<f32> for Color {
+impl Mul<f64> for Color {
   type Output = Color;
 
-  fn mul(self, rhs: f32) -> Color {
+  fn mul(self, rhs: f64) -> Color {
     Color {
       r: self.r * rhs,
       g: self.g * rhs,
@@ -97,9 +97,9 @@ impl Canvas {
     let pixel = self.buffer.get_pixel(x, y);
 
     Color {
-      r: (pixel[0] as f32 / 255.0),
-      g: (pixel[1] as f32 / 255.0),
-      b: (pixel[2] as f32 / 255.0),
+      r: (pixel[0] as f64 / 255.0),
+      g: (pixel[1] as f64 / 255.0),
+      b: (pixel[2] as f64 / 255.0),
     }
   }
 

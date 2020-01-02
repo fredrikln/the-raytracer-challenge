@@ -32,11 +32,11 @@ fn main() {
   floor.material = m1;
 
   let mut left_wall = Sphere::new();
-  left_wall.transform = Matrix::translate(0.0, 0.0, 5.0) * Matrix::rotate_y(-std::f32::consts::PI / 4.0) * Matrix::rotate_x(std::f32::consts::PI / 2.0) * Matrix::scale(10.0, 0.01, 10.0);
+  left_wall.transform = Matrix::translate(0.0, 0.0, 5.0) * Matrix::rotate_y(-std::f64::consts::PI / 4.0) * Matrix::rotate_x(std::f64::consts::PI / 2.0) * Matrix::scale(10.0, 0.01, 10.0);
   left_wall.material = m1;
 
   let mut right_wall = Sphere::new();
-  right_wall.transform = Matrix::translate(0.0, 0.0, 5.0) * Matrix::rotate_y(std::f32::consts::PI / 4.0) * Matrix::rotate_x(std::f32::consts::PI / 2.0) * Matrix::scale(10.0, 0.01, 10.0);
+  right_wall.transform = Matrix::translate(0.0, 0.0, 5.0) * Matrix::rotate_y(std::f64::consts::PI / 4.0) * Matrix::rotate_x(std::f64::consts::PI / 2.0) * Matrix::scale(10.0, 0.01, 10.0);
   right_wall.material = m1;
 
   let mut middle = Sphere::new();
@@ -73,7 +73,7 @@ fn main() {
     lights: vec![light]
   };
 
-  let mut camera = Camera::new(100, 50, std::f32::consts::PI / 3.0);
+  let mut camera = Camera::new(100, 50, std::f64::consts::PI / 3.0);
   camera.transform = Camera::view_transform(
     Point { x: 0.0, y: 1.5, z: -5.0 },
     Point { x: 0.0, y: 1.0, z: 0.0 },
