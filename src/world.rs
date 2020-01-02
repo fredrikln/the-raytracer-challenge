@@ -60,8 +60,9 @@ impl World {
   pub fn shade_hit(&self, comps: Computations) -> Color {
     let mut color = Color { r: 0.0, g: 0.0, b: 0.0 };
 
-    for (i, light) in self.lights.iter().enumerate() {
-      color = color + comps.object.material.lighting(*light, comps.point, comps.eye_vector, comps.normal);
+    for (_i, light) in self.lights.iter().enumerate() {
+      let in_shadow = self.is_shadowed(*light, comps.over_point);
+      color = color + comps.object.material.lighting(*light, comps.point, comps.eye_vector, comps.normal, in_shadow);
     }
 
     color
@@ -80,6 +81,23 @@ impl World {
 
     self.shade_hit(comps)
   }
+
+  pub fn is_shadowed(&self, light: PointLight, point: Point) -> bool {
+    let v = light.position - point;
+    let distance = v.magnitude();
+    let direction = v.normalize();
+
+    let r = Ray { origin: point, direction };
+    let intersections = self.intersect(r);
+
+    let hit = Intersection::hit(intersections);
+
+    if hit.is_some() && hit.unwrap().time < distance {
+      return true
+    }
+
+    return false
+  }
 }
 
 // fn prepare_computations()
@@ -96,6 +114,7 @@ mod tests {
   use crate::vector::Vector;
   use crate::ray::Ray;
   use crate::intersection::Intersection;
+  use crate::utils::EPSILON;
 
   #[test]
   fn empty_world() {
@@ -220,5 +239,76 @@ mod tests {
     let c = w.color_at(r);
 
     assert_eq!(c, s2.material.color);
+  }
+
+  #[test]
+  fn there_is_no_shadow_when_nothing_is_collinear_with_point_and_light() {
+    let w = World::default();
+    let l = w.lights[0];
+    let p = Point { x: 0.0, y: 10.0, z: 0.0 };
+
+    assert_eq!(w.is_shadowed(l, p), false);
+  }
+
+  #[test]
+  fn shadow_when_object_between_light_and_point() {
+    let w = World::default();
+    let l = w.lights[0];
+    let p = Point { x: 10.0, y: -10.0, z: 10.0 };
+
+    assert_eq!(w.is_shadowed(l, p), true);
+  }
+
+  #[test]
+  fn no_shadow_when_object_behind_light() {
+    let w = World::default();
+    let l = w.lights[0];
+    let p = Point { x: -20.0, y: 20.0, z: -20.0 };
+
+    assert_eq!(w.is_shadowed(l, p), false);
+  }
+
+  #[test]
+  fn no_shadow_when_object_behind_point() {
+    let w = World::default();
+    let l = w.lights[0];
+    let p = Point { x: -2.0, y: 2.0, z: -2.0 };
+
+    assert_eq!(w.is_shadowed(l, p), false);
+  }
+
+  #[test]
+  fn shade_hit_is_given_an_intersection_in_shadow() {
+    let mut w = World::default();
+    w.lights = vec![PointLight { position: Point { x: 0.0, y: 0.0, z: -10.0 }, intensity: Color { r: 1.0, g: 1.0, b: 1.0 } }];
+
+    let s1 = Sphere::new();
+
+    let mut s2 = Sphere::new();
+    s2.transform = Matrix::translate(0.0, 0.0, 10.0);
+
+    w.objects = vec![s1, s2];
+
+    let r = Ray { origin: Point { x: 0.0, y: 0.0, z: 5.0 }, direction: Vector { x: 0.0, y: 0.0, z: 1.0 } };
+    let i = Intersection { time: 4.0, object: &s2 };
+    let comps = i.prepare_computations(r);
+
+    let c = w.shade_hit(comps);
+
+    assert_eq!(c, Color { r: 0.1, g: 0.1, b: 0.1 });
+  }
+
+  #[test]
+  fn the_hit_should_offset_the_point() {
+    let r = Ray { origin: Point { x: 0.0, y: 0.0, z: -5.0 }, direction: Vector { x: 0.0, y: 0.0, z: 1.0 } };
+    let mut s = Sphere::new();
+    s.transform = Matrix::translate(0.0, 0.0, 1.0);
+
+    let i = Intersection { time: 5.0, object: &s };
+    let comps = i.prepare_computations(r);
+
+    assert_eq!(comps.over_point.z < -(EPSILON / 2.0), true);
+    assert_eq!(comps.point.z > comps.over_point.z, true);
+
   }
 }

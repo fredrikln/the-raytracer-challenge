@@ -2,6 +2,7 @@ use crate::sphere::Sphere;
 use crate::ray::Ray;
 use crate::vector::Vector;
 use crate::point::Point;
+use crate::utils::EPSILON;
 
 use std::cmp::Ordering::Equal;
 
@@ -38,6 +39,8 @@ impl Intersection<'_> {
       inside = false
     }
 
+    let over_point = point + normal * EPSILON * 150.0;
+
     Computations {
       time: self.time,
       object: self.object,
@@ -45,6 +48,7 @@ impl Intersection<'_> {
       eye_vector,
       normal,
       inside,
+      over_point,
     }
   }
 }
@@ -56,6 +60,7 @@ pub struct Computations<'a> {
   pub eye_vector: Vector,
   pub normal: Vector,
   pub inside: bool,
+  pub over_point: Point,
 }
 
 #[cfg(test)]

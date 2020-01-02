@@ -23,7 +23,7 @@ impl Material {
     }
   }
 
-  pub fn lighting(&self, light: PointLight, position: Point, eye_vector: Vector, normal: Vector) -> Color {
+  pub fn lighting(&self, light: PointLight, position: Point, eye_vector: Vector, normal: Vector, in_shadow: bool) -> Color {
     let effective_color = self.color * light.intensity;
 
     let lightv = (light.position - position).normalize();
@@ -32,8 +32,8 @@ impl Material {
 
     let light_dot_normal = lightv.dot(&normal);
 
-    let diffuse: Color;
-    let specular: Color;
+    let mut diffuse: Color;
+    let mut specular: Color;
 
     if light_dot_normal < 0.0 {
       diffuse = Color { r: 0.0, g: 0.0, b: 0.0 };
@@ -50,6 +50,11 @@ impl Material {
         let factor = reflect_dot_eye.powf(self.shininess);
         specular = light.intensity * self.specular * factor;
       }
+    }
+
+    if in_shadow {
+      specular = specular * 0.0;
+      diffuse = diffuse * 0.0;
     }
 
     ambient + diffuse + specular
@@ -83,7 +88,7 @@ mod tests {
     let normal = Vector { x: 0.0, y: 0.0, z: -1.0 };
     let light = PointLight { intensity: Color { r: 1.0, g: 1.0, b: 1.0 }, position: Point { x: 0.0, y: 0.0, z: -10.0 } };
 
-    let light = material.lighting(light, position, eye_vector, normal);
+    let light = material.lighting(light, position, eye_vector, normal, false);
 
     assert_eq!(light, Color { r: 1.9, g: 1.9, b: 1.9 });
   }
@@ -96,7 +101,7 @@ mod tests {
     let normal = Vector { x: 0.0, y: 0.0, z: -1.0 };
     let light = PointLight { intensity: Color { r: 1.0, g: 1.0, b: 1.0 }, position: Point { x: 0.0, y: 0.0, z: -10.0 } };
 
-    let light = material.lighting(light, position, eye_vector, normal);
+    let light = material.lighting(light, position, eye_vector, normal, false);
 
     assert_eq!(light, Color { r: 1.0, g: 1.0, b: 1.0 });
   }
@@ -109,7 +114,7 @@ mod tests {
     let normal = Vector { x: 0.0, y: 0.0, z: -1.0 };
     let light = PointLight { intensity: Color { r: 1.0, g: 1.0, b: 1.0 }, position: Point { x: 0.0, y: 10.0, z: -10.0 } };
 
-    let light = material.lighting(light, position, eye_vector, normal);
+    let light = material.lighting(light, position, eye_vector, normal, false);
 
     assert_eq!(light, Color { r: 0.7364, g: 0.7364, b: 0.7364 });
   }
@@ -122,7 +127,7 @@ mod tests {
     let normal = Vector { x: 0.0, y: 0.0, z: -1.0 };
     let light = PointLight { intensity: Color { r: 1.0, g: 1.0, b: 1.0 }, position: Point { x: 0.0, y: 10.0, z: -10.0 } };
 
-    let light = material.lighting(light, position, eye_vector, normal);
+    let light = material.lighting(light, position, eye_vector, normal, false);
 
     assert_eq!(light, Color { r: 1.6363853, g: 1.6363853, b: 1.6363853 });
   }
@@ -135,7 +140,20 @@ mod tests {
     let normal = Vector { x: 0.0, y: 0.0, z: -1.0 };
     let light = PointLight { intensity: Color { r: 1.0, g: 1.0, b: 1.0 }, position: Point { x: 0.0, y: 0.0, z: 10.0 } };
 
-    let light = material.lighting(light, position, eye_vector, normal);
+    let light = material.lighting(light, position, eye_vector, normal, false);
+
+    assert_eq!(light, Color { r: 0.1, g: 0.1, b: 0.1 });
+  }
+
+  #[test]
+  fn lighting_with_the_surface_in_shadow() {
+    let material = Material::new();
+    let position = Point { x: 0.0, y: 0.0, z: 0.0 };
+    let eye_vector = Vector { x: 0.0, y: 0.0, z: -1.0 };
+    let normal = Vector { x: 0.0, y: 0.0, z: -1.0 };
+    let light = PointLight { intensity: Color { r: 1.0, g: 1.0, b: 1.0 }, position: Point { x: 0.0, y: 0.0, z: -10.0 } };
+    let in_shadow = true;
+    let light = material.lighting(light, position, eye_vector, normal, in_shadow);
 
     assert_eq!(light, Color { r: 0.1, g: 0.1, b: 0.1 });
   }
