@@ -3,13 +3,14 @@ use crate::ray::Ray;
 use crate::vector::Vector;
 use crate::point::Point;
 use crate::utils::EPSILON;
+use crate::object::{Object,Intersectable};
 
 use std::cmp::Ordering::Equal;
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Intersection<'a> {
   pub time: f64,
-  pub object: &'a Sphere
+  pub object: &'a Object
 }
 
 impl Intersection<'_> {
@@ -55,7 +56,7 @@ impl Intersection<'_> {
 
 pub struct Computations<'a> {
   pub time: f64,
-  pub object: &'a Sphere,
+  pub object: &'a Object,
   pub point: Point,
   pub eye_vector: Vector,
   pub normal: Vector,
@@ -70,21 +71,22 @@ mod tests {
   use crate::intersection::Intersection;
   use crate::ray::Ray;
   use crate::vector::Vector;
+  use crate::object::Object;
 
   #[test]
   fn an_intersection_encapsulates_time_and_object() {
     let s = Sphere::new();
-    let i = Intersection { time: 3.5, object: &s };
+    let i = Intersection { time: 3.5, object: &Object::Sphere(s) };
 
     assert_eq!(i.time, 3.5);
-    assert_eq!(i.object, &s);
+    assert_eq!(i.object, &Object::Sphere(s));
   }
 
   #[test]
   fn the_hit_when_all_intersections_positive() {
     let s = Sphere::new();
-    let i1 = Intersection { time: 1.0, object: &s };
-    let i2 = Intersection { time: 2.0, object: &s };
+    let i1 = Intersection { time: 1.0, object: &Object::Sphere(s) };
+    let i2 = Intersection { time: 2.0, object: &Object::Sphere(s) };
     let intersections = vec![i1, i2];
 
     assert_eq!(Intersection::hit(intersections).unwrap(), i1);
@@ -93,8 +95,8 @@ mod tests {
   #[test]
   fn the_hit_when_some_intersections_negative() {
     let s = Sphere::new();
-    let i1 = Intersection { time: -1.0, object: &s };
-    let i2 = Intersection { time: 1.0, object: &s };
+    let i1 = Intersection { time: -1.0, object: &Object::Sphere(s) };
+    let i2 = Intersection { time: 1.0, object: &Object::Sphere(s) };
     let intersections = vec![i1, i2];
 
     assert_eq!(Intersection::hit(intersections).unwrap(), i2);
@@ -103,8 +105,8 @@ mod tests {
   #[test]
   fn the_hit_when_all_intersections_negative() {
     let s = Sphere::new();
-    let i1 = Intersection { time: -2.0, object: &s };
-    let i2 = Intersection { time: -1.0, object: &s };
+    let i1 = Intersection { time: -2.0, object: &Object::Sphere(s) };
+    let i2 = Intersection { time: -1.0, object: &Object::Sphere(s) };
     let intersections = vec![i1, i2];
 
     assert_eq!(Intersection::hit(intersections), None);
@@ -113,10 +115,10 @@ mod tests {
   #[test]
   fn the_lowest_non_negative_intersection() {
     let s = Sphere::new();
-    let i1 = Intersection { time: 5.0, object: &s };
-    let i2 = Intersection { time: 7.0, object: &s };
-    let i3 = Intersection { time: -3.0, object: &s };
-    let i4 = Intersection { time: 2.0, object: &s };
+    let i1 = Intersection { time: 5.0, object: &Object::Sphere(s) };
+    let i2 = Intersection { time: 7.0, object: &Object::Sphere(s) };
+    let i3 = Intersection { time: -3.0, object: &Object::Sphere(s) };
+    let i4 = Intersection { time: 2.0, object: &Object::Sphere(s) };
     let intersections = vec![i1, i2, i3, i4];
 
     assert_eq!(Intersection::hit(intersections).unwrap(), i4);
@@ -126,7 +128,7 @@ mod tests {
   fn precomputing_the_state_of_an_intersection() {
     let r = Ray { origin: Point { x: 0.0, y: 0.0, z: -5.0 }, direction: Vector { x: 0.0, y: 0.0, z: 1.0 } };
     let s = Sphere::new();
-    let i = Intersection { time: 4.0, object: &s };
+    let i = Intersection { time: 4.0, object: &Object::Sphere(s) };
 
     let comps = i.prepare_computations(r);
 
@@ -141,7 +143,7 @@ mod tests {
   fn the_hit_when_intersection_occurs_outside() {
     let r = Ray { origin: Point { x: 0.0, y: 0.0, z: -5.0 }, direction: Vector { x: 0.0, y: 0.0, z: 1.0 } };
     let s = Sphere::new();
-    let i = Intersection { time: 4.0, object: &s };
+    let i = Intersection { time: 4.0, object: &Object::Sphere(s) };
 
     let comps = i.prepare_computations(r);
 
@@ -152,7 +154,7 @@ mod tests {
   fn the_hit_when_intersection_occurs_inside() {
     let r = Ray { origin: Point { x: 0.0, y: 0.0, z: 0.0 }, direction: Vector { x: 0.0, y: 0.0, z: 1.0 } };
     let s = Sphere::new();
-    let i = Intersection { time: 1.0, object: &s };
+    let i = Intersection { time: 1.0, object: &Object::Sphere(s) };
 
     let comps = i.prepare_computations(r);
 

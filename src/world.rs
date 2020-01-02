@@ -8,12 +8,13 @@ use crate::ray::Ray;
 use crate::intersection::Intersection;
 use crate::intersection::Computations;
 use crate::vector::Vector;
+use crate::object::{Object, Intersectable};
 
 use std::cmp::Ordering::Equal;
 
 #[derive(Debug)]
 pub struct World {
-  pub objects: Vec<Sphere>,
+  pub objects: Vec<Object>,
   pub lights: Vec<PointLight>,
 }
 
@@ -39,7 +40,7 @@ impl World {
     let light = PointLight { position: Point { x: -10.0, y: 10.0, z: -10.0 }, intensity: Color { r: 1.0, g: 1.0, b: 1.0 } };
 
     World {
-      objects: vec![s1, s2],
+      objects: vec![Object::Sphere(s1), Object::Sphere(s2)],
       lights: vec![light]
     }
   }
@@ -47,9 +48,12 @@ impl World {
   pub fn intersect(&self, r: Ray) -> Vec<Intersection> {
     let mut intersections: Vec<Intersection> = vec![];
 
-    for (i, object) in self.objects.iter().enumerate() {
+    for (_i, object) in self.objects.iter().enumerate() {
       let mut object_intersections = object.intersect(r);
-      intersections.append(&mut object_intersections);
+
+      for t in object_intersections {
+        intersections.push(Intersection { time: t, object: object });
+      }
     }
 
     intersections.sort_by(|a, b| a.time.partial_cmp(&b.time).unwrap_or(Equal));
@@ -62,7 +66,7 @@ impl World {
 
     for (_i, light) in self.lights.iter().enumerate() {
       let in_shadow = self.is_shadowed(*light, comps.over_point);
-      color = color + comps.object.material.lighting(*light, comps.point, comps.eye_vector, comps.normal, in_shadow);
+      color = color + comps.object.material().lighting(*light, comps.point, comps.eye_vector, comps.normal, in_shadow);
     }
 
     color
@@ -115,6 +119,7 @@ mod tests {
   use crate::ray::Ray;
   use crate::intersection::Intersection;
   use crate::utils::EPSILON;
+  use crate::object::Object;
 
   #[test]
   fn empty_world() {
@@ -142,8 +147,8 @@ mod tests {
 
     assert_eq!(w.objects.len(), 2);
     assert_eq!(w.lights.len(), 1);
-    assert_eq!(w.objects[0], s1);
-    assert_eq!(w.objects[1], s2);
+    assert_eq!(w.objects[0], Object::Sphere(s1));
+    assert_eq!(w.objects[1], Object::Sphere(s2));
     assert_eq!(w.lights[0], light);
   }
 
@@ -166,8 +171,8 @@ mod tests {
     let w = World::default();
     let r = Ray { origin: Point { x: 0.0, y: 0.0, z: -5.0 }, direction: Vector { x: 0.0, y: 0.0, z: 1.0 } };
 
-    let shape = w.objects[0];
-    let i = Intersection { time: 4.0, object: &shape };
+    let shape = &w.objects[0];
+    let i = Intersection { time: 4.0, object: shape };
 
     let comps = i.prepare_computations(r);
 
@@ -185,8 +190,8 @@ mod tests {
 
     let r = Ray { origin: Point { x: 0.0, y: 0.0, z: 0.0 }, direction: Vector { x: 0.0, y: 0.0, z: 1.0 } };
 
-    let shape = w.objects[1];
-    let i = Intersection { time: 0.5, object: &shape };
+    let shape = &w.objects[1];
+    let i = Intersection { time: 0.5, object: shape };
 
     let comps = i.prepare_computations(r);
 
@@ -234,7 +239,7 @@ mod tests {
     s2.transform = Matrix::scale(0.5, 0.5, 0.5);
     s2.material = s2_material;
 
-    w.objects = vec![s1, s2];
+    w.objects = vec![Object::Sphere(s1), Object::Sphere(s2)];
 
     let c = w.color_at(r);
 
@@ -287,10 +292,10 @@ mod tests {
     let mut s2 = Sphere::new();
     s2.transform = Matrix::translate(0.0, 0.0, 10.0);
 
-    w.objects = vec![s1, s2];
+    w.objects = vec![Object::Sphere(s1), Object::Sphere(s2)];
 
     let r = Ray { origin: Point { x: 0.0, y: 0.0, z: 5.0 }, direction: Vector { x: 0.0, y: 0.0, z: 1.0 } };
-    let i = Intersection { time: 4.0, object: &s2 };
+    let i = Intersection { time: 4.0, object: &Object::Sphere(s2) };
     let comps = i.prepare_computations(r);
 
     let c = w.shade_hit(comps);
@@ -304,7 +309,7 @@ mod tests {
     let mut s = Sphere::new();
     s.transform = Matrix::translate(0.0, 0.0, 1.0);
 
-    let i = Intersection { time: 5.0, object: &s };
+    let i = Intersection { time: 5.0, object: &Object::Sphere(s) };
     let comps = i.prepare_computations(r);
 
     assert_eq!(comps.over_point.z < -(EPSILON / 2.0), true);

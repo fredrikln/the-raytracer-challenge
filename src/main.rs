@@ -10,16 +10,18 @@ mod point_light;
 mod material;
 mod world;
 mod camera;
+mod object;
 
 use point::Point;
 use vector::Vector;
 use canvas::Color;
 use matrix::Matrix;
-use sphere::Sphere;
 use material::Material;
 use point_light::PointLight;
 use camera::Camera;
 use world::World;
+use sphere::Sphere;
+use object::{Object};
 
 use std::time::SystemTime;
 
@@ -68,12 +70,20 @@ fn main() {
     intensity: Color { r: 1.0, g: 1.0, b: 1.0 }
   };
 
-  let world = World {
-    objects: vec![floor, left_wall, right_wall, middle, right, left],
-    lights: vec![light]
+  let light2 = PointLight {
+    position: Point { x: 10.0, y: 10.0, z: -10.0 },
+    intensity: Color { r: 0.5, g: 0.0, b: 0.0 }
   };
 
-  let mut camera = Camera::new(100, 50, std::f64::consts::PI / 3.0);
+  let world = World {
+    objects: vec![Object::Sphere(floor), Object::Sphere(left_wall), Object::Sphere(right_wall), Object::Sphere(middle), Object::Sphere(right), Object::Sphere(left)],
+    lights: vec![light, light2]
+  };
+
+  let width: u32 = 500;
+  let height = width / 2;
+
+  let mut camera = Camera::new(width, height, std::f64::consts::PI / 3.0);
   camera.transform = Camera::view_transform(
     Point { x: 0.0, y: 1.5, z: -5.0 },
     Point { x: 0.0, y: 1.0, z: 0.0 },
