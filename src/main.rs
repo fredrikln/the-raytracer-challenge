@@ -46,24 +46,45 @@ fn main() {
   let mut m1 = Material::new();
   m1.color = Color { r: 1.0, g: 0.9, b: 0.9 };
   m1.specular = 0.0;
-  m1.reflective = 0.1;
+  m1.reflective = 0.0;
+  floor.casts_shadow = false;
   floor.material = m1;
 
+  let mut roof = Plane::new();
+  roof.transform = Matrix::translate(0.0, 15.0, 0.0);
+  roof.casts_shadow = false;
+  roof.material = m1;
+
   let mut left_wall = Plane::new();
-  left_wall.transform = Matrix::translate(0.0, 0.0, 5.0) * Matrix::rotate_y(-std::f64::consts::PI / 4.0) * Matrix::rotate_x(std::f64::consts::PI / 2.0);
+  left_wall.transform = Matrix::translate(-15.0, 0.0, 0.0) * Matrix::rotate_y(-std::f64::consts::PI / 2.0) * Matrix::rotate_x(std::f64::consts::PI / 2.0);
+  left_wall.casts_shadow = false;
   left_wall.material = m1;
 
   let mut right_wall = Plane::new();
-  right_wall.transform = Matrix::translate(0.0, 0.0, 5.0) * Matrix::rotate_y(std::f64::consts::PI / 4.0) * Matrix::rotate_x(std::f64::consts::PI / 2.0);
+  right_wall.transform = Matrix::translate(15.0, 0.0, 0.0) * Matrix::rotate_y(std::f64::consts::PI / 2.0) * Matrix::rotate_x(std::f64::consts::PI / 2.0);
+  right_wall.casts_shadow = false;
   right_wall.material = m1;
+
+  let mut far_wall = Plane::new();
+  far_wall.transform = Matrix::translate(0.0, 0.0, 15.0) * Matrix::rotate_x(std::f64::consts::PI / 2.0);
+  far_wall.casts_shadow = false;
+  far_wall.material = m1;
+
+  let mut near_wall = Plane::new();
+  near_wall.transform = Matrix::translate(0.0, 0.0, -15.0) * Matrix::rotate_x(std::f64::consts::PI / 2.0);
+  near_wall.casts_shadow = false;
+  near_wall.material = m1;
 
   let mut middle = Sphere::new();
   middle.transform = Matrix::translate(-0.5, 1.0, 0.5);
   let mut m2 = Material::new();
-  m2.color = Color { r: 0.1, g: 1.0, b: 0.5 };
-  m2.diffuse = 0.7;
-  m2.specular = 0.3;
-  m2.pattern = Some(pattern);
+  m2.color = Color { r: 0.373, g: 0.404, b: 0.55 };
+  m2.ambient = 0.0;
+  m2.diffuse = 0.2;
+  m2.specular = 1.0;
+  m2.shininess = 200.0;
+  m2.pattern = None;//Some(pattern);
+  m2.reflective = 0.7;
   middle.material = m2;
 
   let mut right = Sphere::new();
@@ -85,22 +106,22 @@ fn main() {
   left.material = m4;
 
   let light = PointLight {
-    position: Point { x: -10.0, y: 10.0, z: -10.0 },
+    position: Point { x: -5.0, y: 7.5, z: -5.0 },
     intensity: Color { r: 1.0, g: 1.0, b: 1.0 }
   };
 
   let world = World {
-    objects: vec![Object::Plane(floor), Object::Plane(left_wall), Object::Plane(right_wall), Object::Sphere(middle), Object::Sphere(right), Object::Sphere(left)],
+    objects: vec![Object::Plane(floor), Object::Plane(roof), Object::Plane(left_wall), Object::Plane(right_wall), Object::Plane(far_wall), Object::Plane(near_wall), Object::Sphere(middle), Object::Sphere(right), Object::Sphere(left)],
     lights: vec![light]
   };
 
-  let width: u32 = 500;
-  let height = width / 2;
+  let width: u32 = 3840;
+  let height = (width as f64 / 1.77777777777777778) as u32;
 
   let mut camera = Camera::new(width, height, std::f64::consts::PI / 3.0);
-  camera.antialias = false;
+  camera.antialias = true;
   camera.transform = Camera::view_transform(
-    Point { x: 0.0, y: 1.5, z: -5.0 },
+    Point { x: 2.0, y: 1.5, z: -5.0 },
     Point { x: 0.0, y: 1.0, z: 0.0 },
     Vector { x: 0.0, y: 1.0, z: 0.0 }
   );
@@ -108,6 +129,6 @@ fn main() {
   let canvas = camera.render(world);
 
   let time = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).expect("error").as_secs();
-  let filename: &str = &format!("images/image-{}.png", time);
+  let filename: &str = &format!("images/image-{}-{}x{}.png", time, width, height);
   canvas.save(filename);
 }
