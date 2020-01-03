@@ -80,6 +80,7 @@ fn main() {
   let height = width / 2;
 
   let mut camera = Camera::new(width, height, std::f64::consts::PI / 3.0);
+  // camera.antialias = true;
   camera.transform = Camera::view_transform(
     Point { x: 0.0, y: 1.5, z: -5.0 },
     Point { x: 0.0, y: 1.0, z: 0.0 },

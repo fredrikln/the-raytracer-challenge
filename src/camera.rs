@@ -2,7 +2,7 @@ use crate::matrix::Matrix;
 use crate::vector::Vector;
 use crate::point::Point;
 use crate::ray::Ray;
-use crate::canvas::Canvas;
+use crate::canvas::{Canvas,Color};
 use crate::world::World;
 
 #[derive(PartialEq, Debug)]
@@ -14,6 +14,7 @@ pub struct Camera {
   pub pixel_size: f64,
   pub half_height: f64,
   pub half_width: f64,
+  pub antialias: bool,
 }
 
 impl Camera {
@@ -41,12 +42,13 @@ impl Camera {
       half_width,
       half_height,
       pixel_size,
+      antialias: false
     }
   }
 
-  pub fn ray_for_pixel(&self, px: u32, py: u32) -> Ray {
-    let x_offset = (px as f64 + 0.5) * self.pixel_size;
-    let y_offset = (py as f64 + 0.5) * self.pixel_size;
+  pub fn ray_for_pixel(&self, px: u32, py: u32, ox: f64, oy: f64) -> Ray {
+    let x_offset = (px as f64 + ox) * self.pixel_size;
+    let y_offset = (py as f64 + oy) * self.pixel_size;
 
     let world_x = self.half_width - x_offset;
     let world_y = self.half_height - y_offset;
@@ -63,9 +65,21 @@ impl Camera {
 
     for y in 0..self.vsize {
       for x in 0..self.hsize {
-        let r = self.ray_for_pixel(x, y);
+        let c: Color;
+        if self.antialias {
+          let mut color = Color { r: 0.0, g: 0.0, b: 0.0 };
+          for i in 0..2 {
+            for j in 0..2 {
+              let r = self.ray_for_pixel(x, y, 0.25+(i as f64 * 0.5), 0.25+(j as f64 * 0.5));
+              color = color + w.color_at(r);
+            }
+          }
+          c = color * (1.0/4.0);
+        } else {
+          let r = self.ray_for_pixel(x, y, 0.5, 0.5);
+          c = w.color_at(r);
+        }
 
-        let c = w.color_at(r);
 
         canvas.set_pixel(x, y, c);
       }
