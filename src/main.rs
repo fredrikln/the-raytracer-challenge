@@ -30,6 +30,8 @@ use pattern::{Pattern,StripedPattern,GradientPattern};
 use std::time::SystemTime;
 
 fn main() {
+  let starttime = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).expect("error");
+
   let mut sp = StripedPattern::new(Color { r: 1.0, g: 0.0, b: 0.0 }, Color { r: 0.0, g: 0.0, b: 1.0 });
   sp.transform = Matrix::scale_linear(0.125) * Matrix::rotate_z(-std::f64::consts::PI / 4.0) * Matrix::rotate_y(-std::f64::consts::PI / 8.0);
   let pattern = Pattern::Stripe(sp);
@@ -115,11 +117,11 @@ fn main() {
     lights: vec![light]
   };
 
-  let width: u32 = 3840;
+  let width: u32 = 500;
   let height = (width as f64 / 1.77777777777777778) as u32;
 
   let mut camera = Camera::new(width, height, std::f64::consts::PI / 3.0);
-  camera.antialias = true;
+  camera.antialias = false;
   camera.transform = Camera::view_transform(
     Point { x: 2.0, y: 1.5, z: -5.0 },
     Point { x: 0.0, y: 1.0, z: 0.0 },
@@ -128,7 +130,13 @@ fn main() {
 
   let canvas = camera.render(world);
 
-  let time = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).expect("error").as_secs();
-  let filename: &str = &format!("images/image-{}-{}x{}.png", time, width, height);
+  let endtime = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).expect("error");
+
+  println!("{}x{} = {} pixels", width, height, width * height);
+  println!("Render took {:.3} seconds", (endtime - starttime).as_millis() as f64 / 1000.0);
+  println!("Average {:.3} microseconds per pixel", (endtime - starttime).as_micros() as f64 / (width*height) as f64);
+
+  let filetime = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).expect("error").as_secs();
+  let filename: &str = &format!("images/image-{}-{}x{}.png", filetime, width, height);
   canvas.save(filename);
 }
