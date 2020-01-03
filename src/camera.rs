@@ -208,7 +208,7 @@ mod tests {
   #[test]
   fn ray_through_center_of_canvas() {
     let c = Camera::new(201, 101, std::f64::consts::PI / 2.0);
-    let r = c.ray_for_pixel(100, 50);
+    let r = c.ray_for_pixel(100, 50, 0.5, 0.5);
 
     assert_eq!(r.origin, Point { x: 0.0, y: 0.0, z: 0.0 });
     assert_eq!(r.direction, Vector { x: 0.0, y: 0.0, z: -1.0 });
@@ -217,7 +217,7 @@ mod tests {
   #[test]
   fn ray_through_corner_of_canvas() {
     let c = Camera::new(201, 101, std::f64::consts::PI / 2.0);
-    let r = c.ray_for_pixel(0, 0);
+    let r = c.ray_for_pixel(0, 0, 0.5, 0.5);
 
     assert_eq!(r.origin, Point { x: 0.0, y: 0.0, z: 0.0 });
     assert_eq!(r.direction, Vector { x: 0.6651864, y: 0.33259323, z: -0.66851234 });
@@ -227,7 +227,7 @@ mod tests {
   fn ray_when_camera_is_transformed() {
     let mut c = Camera::new(201, 101, std::f64::consts::PI / 2.0);
     c.transform = Matrix::rotate_y(std::f64::consts::PI / 4.0) * Matrix::translate(0.0, -2.0, 5.0);
-    let r = c.ray_for_pixel(100, 50);
+    let r = c.ray_for_pixel(100, 50, 0.5, 0.5);
 
     assert_eq!(r.origin, Point { x: 0.0, y: 2.0, z: -5.0 });
     assert_eq!(r.direction, Vector { x: ((2.0 as f64).sqrt() / 2.0), y: 0.0, z: -((2.0 as f64).sqrt() / 2.0) });

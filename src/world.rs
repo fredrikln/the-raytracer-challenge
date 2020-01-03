@@ -66,7 +66,7 @@ impl World {
 
     for (_i, light) in self.lights.iter().enumerate() {
       let in_shadow = self.is_shadowed(*light, comps.over_point);
-      color = color + comps.object.material().lighting(*light, comps.point, comps.eye_vector, comps.normal, in_shadow);
+      color = color + comps.object.material().lighting_with_object(comps.object, *light, comps.point, comps.eye_vector, comps.normal, in_shadow);
     }
 
     color

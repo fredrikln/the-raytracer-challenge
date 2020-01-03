@@ -12,6 +12,7 @@ mod world;
 mod camera;
 mod object;
 mod plane;
+mod pattern;
 
 use point::Point;
 use vector::Vector;
@@ -24,10 +25,23 @@ use world::World;
 use sphere::Sphere;
 use plane::Plane;
 use object::{Object};
+use pattern::{Pattern,StripedPattern,GradientPattern};
 
 use std::time::SystemTime;
 
 fn main() {
+  let mut sp = StripedPattern::new(Color { r: 1.0, g: 0.0, b: 0.0 }, Color { r: 0.0, g: 0.0, b: 1.0 });
+  sp.transform = Matrix::scale_linear(0.125) * Matrix::rotate_z(-std::f64::consts::PI / 4.0) * Matrix::rotate_y(-std::f64::consts::PI / 8.0);
+  let pattern = Pattern::Stripe(sp);
+
+  let mut sp2 = GradientPattern::new(Color { r: 1.0, g: 0.0, b: 0.0 }, Color { r: 0.0, g: 1.0, b: 0.0 });
+  sp2.transform = Matrix::rotate_z(std::f64::consts::PI / 4.0) * Matrix::translate(1.0, 0.0, 0.0) * Matrix::scale_linear(2.0);
+  let pattern2 = Pattern::Gradient(sp2);
+
+  let mut sp3 = StripedPattern::new(Color { r: 1.0, g: 1.0, b: 0.0 }, Color { r: 0.0, g: 1.0, b: 0.0 });
+  sp3.transform = Matrix::scale_linear(0.25) * Matrix::rotate_x(std::f64::consts::PI / 4.0);
+  let pattern3 = Pattern::Stripe(sp3);
+
   let mut floor = Plane::new();
   let mut m1 = Material::new();
   m1.color = Color { r: 1.0, g: 0.9, b: 0.9 };
@@ -48,6 +62,7 @@ fn main() {
   m2.color = Color { r: 0.1, g: 1.0, b: 0.5 };
   m2.diffuse = 0.7;
   m2.specular = 0.3;
+  m2.pattern = Some(pattern);
   middle.material = m2;
 
   let mut right = Sphere::new();
@@ -56,6 +71,7 @@ fn main() {
   m3.color = Color { r: 0.5, g: 1.0, b: 0.1 };
   m3.diffuse = 0.7;
   m3.specular = 0.3;
+  m3.pattern = Some(pattern2);
   right.material = m3;
 
   let mut left = Sphere::new();
@@ -64,6 +80,7 @@ fn main() {
   m4.color = Color { r: 1.0, g: 0.8, b: 0.1 };
   m4.diffuse = 0.7;
   m4.specular = 0.3;
+  m4.pattern = Some(pattern3);
   left.material = m4;
 
   let light = PointLight {
@@ -80,7 +97,7 @@ fn main() {
   let height = width / 2;
 
   let mut camera = Camera::new(width, height, std::f64::consts::PI / 3.0);
-  // camera.antialias = true;
+  camera.antialias = false;
   camera.transform = Camera::view_transform(
     Point { x: 0.0, y: 1.5, z: -5.0 },
     Point { x: 0.0, y: 1.0, z: 0.0 },
