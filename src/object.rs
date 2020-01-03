@@ -11,6 +11,7 @@ pub trait Intersectable {
   fn normal(&self, p: Point) -> Vector;
   fn material(&self) -> Material;
   fn transform(&self) -> Matrix;
+  fn casts_shadow(&self) -> bool;
 }
 
 #[derive(PartialEq, Debug)]
@@ -45,6 +46,13 @@ impl Intersectable for Object {
     match *self {
       Object::Sphere(ref s) => s.material(),
       Object::Plane(ref p) => p.material(),
+    }
+  }
+
+  fn casts_shadow(&self) -> bool {
+    match *self {
+      Object::Sphere(ref s) => s.casts_shadow(),
+      Object::Plane(ref p) => p.casts_shadow(),
     }
   }
 }

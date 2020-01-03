@@ -9,6 +9,7 @@ use crate::intersection::Intersection;
 use crate::intersection::Computations;
 use crate::vector::Vector;
 use crate::object::{Object, Intersectable};
+use crate::utils::MAX_STEPS;
 
 use std::cmp::Ordering::Equal;
 
@@ -61,7 +62,22 @@ impl World {
     intersections
   }
 
-  pub fn shade_hit(&self, comps: Computations) -> Color {
+  pub fn reflected_color(&self, comps: Computations, remaining: u8) -> Color {
+    if remaining == 0 {
+      return Color { r: 0.0, g: 0.0, b: 0.0 };
+    }
+
+    if comps.object.material().reflective == 0.0 {
+      return Color { r: 0.0, g: 0.0, b: 0.0 };
+    }
+
+    let reflect_ray = Ray { origin: comps.over_point, direction: comps.reflect_vector };
+    let color = self.color_at(reflect_ray, remaining - 1);
+
+    color * comps.object.material().reflective
+  }
+
+  pub fn shade_hit(&self, comps: Computations, remaining: u8) -> Color {
     let mut color = Color { r: 0.0, g: 0.0, b: 0.0 };
 
     for (_i, light) in self.lights.iter().enumerate() {
@@ -69,10 +85,12 @@ impl World {
       color = color + comps.object.material().lighting_with_object(comps.object, *light, comps.point, comps.eye_vector, comps.normal, in_shadow);
     }
 
-    color
+    let reflected = self.reflected_color(comps, remaining);
+
+    color + reflected
   }
 
-  pub fn color_at(&self, r: Ray) -> Color {
+  pub fn color_at(&self, r: Ray, remaining: u8) -> Color {
     let intersections = self.intersect(r);
     let hit = Intersection::hit(intersections);
 
@@ -83,7 +101,7 @@ impl World {
     let unwrapped_hit = hit.unwrap();
     let comps = unwrapped_hit.prepare_computations(r);
 
-    self.shade_hit(comps)
+    self.shade_hit(comps, remaining)
   }
 
   pub fn is_shadowed(&self, light: PointLight, point: Point) -> bool {
@@ -94,7 +112,7 @@ impl World {
     let r = Ray { origin: point, direction };
     let intersections = self.intersect(r);
 
-    let hit = Intersection::hit(intersections);
+    let hit = Intersection::shadow_hit(intersections);
 
     if hit.is_some() && hit.unwrap().time < distance {
       return true
@@ -103,8 +121,6 @@ impl World {
     return false
   }
 }
-
-// fn prepare_computations()
 
 #[cfg(test)]
 mod tests {
@@ -120,6 +136,7 @@ mod tests {
   use crate::intersection::Intersection;
   use crate::utils::EPSILON;
   use crate::object::Object;
+  use crate::utils::MAX_STEPS;
 
   #[test]
   fn empty_world() {
@@ -176,7 +193,7 @@ mod tests {
 
     let comps = i.prepare_computations(r);
 
-    let c = w.shade_hit(comps);
+    let c = w.shade_hit(comps, MAX_STEPS);
 
     assert_eq!(c, Color { r: 0.38066, g: 0.47583, b: 0.2855 });
   }
@@ -195,7 +212,7 @@ mod tests {
 
     let comps = i.prepare_computations(r);
 
-    let c = w.shade_hit(comps);
+    let c = w.shade_hit(comps, MAX_STEPS);
 
     assert_eq!(c, Color { r: 0.90498, g: 0.90498, b: 0.90498 });
   }
@@ -205,7 +222,7 @@ mod tests {
     let w = World::default();
     let r = Ray { origin: Point { x: 0.0, y: 0.0, z: -5.0 }, direction: Vector { x: 0.0, y: 1.0, z: 0.0 } };
 
-    let c = w.color_at(r);
+    let c = w.color_at(r, MAX_STEPS);
 
     assert_eq!(c, Color { r: 0.0, g: 0.0, b: 0.0 });
   }
@@ -215,7 +232,7 @@ mod tests {
     let w = World::default();
     let r = Ray { origin: Point { x: 0.0, y: 0.0, z: -5.0 }, direction: Vector { x: 0.0, y: 0.0, z: 1.0 } };
 
-    let c = w.color_at(r);
+    let c = w.color_at(r, MAX_STEPS);
 
     assert_eq!(c, Color { r: 0.38066, g: 0.47583, b: 0.2855 });
   }
@@ -241,7 +258,7 @@ mod tests {
 
     w.objects = vec![Object::Sphere(s1), Object::Sphere(s2)];
 
-    let c = w.color_at(r);
+    let c = w.color_at(r, MAX_STEPS);
 
     assert_eq!(c, s2.material.color);
   }
@@ -298,7 +315,7 @@ mod tests {
     let i = Intersection { time: 4.0, object: &Object::Sphere(s2) };
     let comps = i.prepare_computations(r);
 
-    let c = w.shade_hit(comps);
+    let c = w.shade_hit(comps, MAX_STEPS);
 
     assert_eq!(c, Color { r: 0.1, g: 0.1, b: 0.1 });
   }

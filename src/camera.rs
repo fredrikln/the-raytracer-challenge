@@ -4,6 +4,7 @@ use crate::point::Point;
 use crate::ray::Ray;
 use crate::canvas::{Canvas,Color};
 use crate::world::World;
+use crate::utils::MAX_STEPS;
 
 #[derive(PartialEq, Debug)]
 pub struct Camera {
@@ -71,13 +72,13 @@ impl Camera {
           for i in 0..2 {
             for j in 0..2 {
               let r = self.ray_for_pixel(x, y, 0.25+(i as f64 * 0.5), 0.25+(j as f64 * 0.5));
-              color = color + w.color_at(r);
+              color = color + w.color_at(r, MAX_STEPS);
             }
           }
           c = color * (1.0/4.0);
         } else {
           let r = self.ray_for_pixel(x, y, 0.5, 0.5);
-          c = w.color_at(r);
+          c = w.color_at(r, MAX_STEPS);
         }
 
 
@@ -117,6 +118,7 @@ mod tests {
   use crate::world::World;
   use crate::canvas::Color;
   use crate::utils::equal;
+  use crate::utils::MAX_STEPS;
 
   #[test]
   fn transformation_matrix_for_default_orientation() {

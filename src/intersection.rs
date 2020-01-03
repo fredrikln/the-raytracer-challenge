@@ -26,11 +26,26 @@ impl Intersection<'_> {
     Some(copy[0])
   }
 
+  pub fn shadow_hit(intersections: Vec<Intersection>) -> Option<Intersection> {
+    let mut copy = intersections.clone();
+    copy.retain(|i| i.object.casts_shadow());
+    copy.retain(|i| i.time > 0.0);
+    copy.sort_by(|a, b| a.time.partial_cmp(&b.time).unwrap_or(Equal));
+
+    if copy.len() == 0 {
+      return None
+    }
+
+    Some(copy[0])
+  }
+
   pub fn prepare_computations(&self, ray: Ray) -> Computations {
     let point = ray.position(self.time);
 
     let mut normal = self.object.normal(point);
     let eye_vector = -ray.direction;
+
+    let reflect_vector = ray.direction.reflect(normal);
 
     let inside: bool;
     if normal.dot(&eye_vector) < 0.0 {
@@ -48,6 +63,7 @@ impl Intersection<'_> {
       point,
       eye_vector,
       normal,
+      reflect_vector,
       inside,
       over_point,
     }
@@ -60,6 +76,7 @@ pub struct Computations<'a> {
   pub point: Point,
   pub eye_vector: Vector,
   pub normal: Vector,
+  pub reflect_vector: Vector,
   pub inside: bool,
   pub over_point: Point,
 }

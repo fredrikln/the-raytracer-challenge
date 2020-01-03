@@ -46,6 +46,7 @@ fn main() {
   let mut m1 = Material::new();
   m1.color = Color { r: 1.0, g: 0.9, b: 0.9 };
   m1.specular = 0.0;
+  m1.reflective = 0.1;
   floor.material = m1;
 
   let mut left_wall = Plane::new();

@@ -11,6 +11,7 @@ use crate::utils::EPSILON;
 pub struct Plane {
   pub transform: Matrix,
   pub material: Material,
+  pub casts_shadow: bool,
 }
 
 impl Intersectable for Plane {
@@ -37,6 +38,10 @@ impl Intersectable for Plane {
   fn transform(&self) -> Matrix {
     self.transform
   }
+
+  fn casts_shadow(&self) -> bool {
+    self.casts_shadow
+  }
 }
 
 impl Plane {
@@ -44,6 +49,7 @@ impl Plane {
     Plane {
       transform: Matrix::identity(),
       material: Material::new(),
+      casts_shadow: true
     }
   }
 

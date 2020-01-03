@@ -10,6 +10,7 @@ use crate::object::{Object,Intersectable};
 pub struct Sphere {
   pub transform: Matrix,
   pub material: Material,
+  pub casts_shadow: bool,
 }
 
 impl Intersectable for Sphere {
@@ -48,6 +49,10 @@ impl Intersectable for Sphere {
   fn transform(&self) -> Matrix {
     self.transform
   }
+
+  fn casts_shadow(&self) -> bool {
+    self.casts_shadow
+  }
 }
 
 impl Sphere {
@@ -55,6 +60,7 @@ impl Sphere {
     Sphere {
       transform: Matrix::identity(),
       material: Material::new(),
+      casts_shadow: true,
     }
   }
 
@@ -250,7 +256,7 @@ mod tests {
     m.ambient = 1.0;
     s.material = m.clone();
 
-    let cm = Material { color: Color { r: 1.0, g: 1.0, b: 1.0 }, ambient: 1.0, diffuse: 0.9, specular: 0.9, shininess: 200.0, pattern: None };
+    let cm = Material { color: Color { r: 1.0, g: 1.0, b: 1.0 }, ambient: 1.0, diffuse: 0.9, specular: 0.9, shininess: 200.0, pattern: None, reflective: 0.0 };
 
     assert_eq!(s.material, cm);
   }
