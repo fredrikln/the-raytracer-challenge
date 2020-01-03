@@ -1,10 +1,10 @@
 use crate::ray::Ray;
-use crate::intersection::Intersection;
 use crate::point::Point;
 use crate::vector::Vector;
 use crate::material::Material;
 use crate::matrix::Matrix;
 use crate::sphere::Sphere;
+use crate::plane::Plane;
 
 pub trait Intersectable {
   fn intersect(&self, r: Ray) -> Vec<f64>;
@@ -15,32 +15,36 @@ pub trait Intersectable {
 
 #[derive(PartialEq, Debug)]
 pub enum Object {
-  Sphere(Sphere)
+  Sphere(Sphere),
+  Plane(Plane)
 }
 
 impl Intersectable for Object {
   fn intersect(&self, r: Ray) -> Vec<f64> {
     match *self {
-      Object::Sphere(ref s) => s.intersect(r)
+      Object::Sphere(ref s) => s.intersect(r),
+      Object::Plane(ref p) => p.intersect(r),
     }
   }
 
   fn normal(&self, p: Point) -> Vector {
     match *self {
-      Object::Sphere(ref s) => s.normal(p)
+      Object::Sphere(ref s) => s.normal(p),
+      Object::Plane(ref pl) => pl.normal(p),
     }
   }
 
   fn transform(&self) -> Matrix {
     match *self {
-      Object::Sphere(ref s) => s.transform()
+      Object::Sphere(ref s) => s.transform(),
+      Object::Plane(ref p) => p.transform(),
     }
   }
 
   fn material(&self) -> Material {
     match *self {
-      Object::Sphere(ref s) => s.material()
+      Object::Sphere(ref s) => s.material(),
+      Object::Plane(ref p) => p.material(),
     }
   }
 }
-

@@ -11,6 +11,7 @@ mod material;
 mod world;
 mod camera;
 mod object;
+mod plane;
 
 use point::Point;
 use vector::Vector;
@@ -21,24 +22,24 @@ use point_light::PointLight;
 use camera::Camera;
 use world::World;
 use sphere::Sphere;
+use plane::Plane;
 use object::{Object};
 
 use std::time::SystemTime;
 
 fn main() {
-  let mut floor = Sphere::new();
-  floor.transform = Matrix::scale(10.0, 0.01, 10.0);
+  let mut floor = Plane::new();
   let mut m1 = Material::new();
   m1.color = Color { r: 1.0, g: 0.9, b: 0.9 };
   m1.specular = 0.0;
   floor.material = m1;
 
-  let mut left_wall = Sphere::new();
-  left_wall.transform = Matrix::translate(0.0, 0.0, 5.0) * Matrix::rotate_y(-std::f64::consts::PI / 4.0) * Matrix::rotate_x(std::f64::consts::PI / 2.0) * Matrix::scale(10.0, 0.01, 10.0);
+  let mut left_wall = Plane::new();
+  left_wall.transform = Matrix::translate(0.0, 0.0, 5.0) * Matrix::rotate_y(-std::f64::consts::PI / 4.0) * Matrix::rotate_x(std::f64::consts::PI / 2.0);
   left_wall.material = m1;
 
-  let mut right_wall = Sphere::new();
-  right_wall.transform = Matrix::translate(0.0, 0.0, 5.0) * Matrix::rotate_y(std::f64::consts::PI / 4.0) * Matrix::rotate_x(std::f64::consts::PI / 2.0) * Matrix::scale(10.0, 0.01, 10.0);
+  let mut right_wall = Plane::new();
+  right_wall.transform = Matrix::translate(0.0, 0.0, 5.0) * Matrix::rotate_y(std::f64::consts::PI / 4.0) * Matrix::rotate_x(std::f64::consts::PI / 2.0);
   right_wall.material = m1;
 
   let mut middle = Sphere::new();
@@ -70,14 +71,9 @@ fn main() {
     intensity: Color { r: 1.0, g: 1.0, b: 1.0 }
   };
 
-  let light2 = PointLight {
-    position: Point { x: 10.0, y: 10.0, z: -10.0 },
-    intensity: Color { r: 0.5, g: 0.0, b: 0.0 }
-  };
-
   let world = World {
-    objects: vec![Object::Sphere(floor), Object::Sphere(left_wall), Object::Sphere(right_wall), Object::Sphere(middle), Object::Sphere(right), Object::Sphere(left)],
-    lights: vec![light, light2]
+    objects: vec![Object::Plane(floor), Object::Plane(left_wall), Object::Plane(right_wall), Object::Sphere(middle), Object::Sphere(right), Object::Sphere(left)],
+    lights: vec![light]
   };
 
   let width: u32 = 500;
