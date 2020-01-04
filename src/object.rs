@@ -5,6 +5,7 @@ use crate::material::Material;
 use crate::matrix::Matrix;
 use crate::sphere::Sphere;
 use crate::plane::Plane;
+use crate::cube::Cube;
 
 pub trait Intersectable {
   fn intersect(&self, r: Ray) -> Vec<f64>;
@@ -14,10 +15,11 @@ pub trait Intersectable {
   fn casts_shadow(&self) -> bool;
 }
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Copy, Clone)]
 pub enum Object {
   Sphere(Sphere),
-  Plane(Plane)
+  Plane(Plane),
+  Cube(Cube),
 }
 
 impl Intersectable for Object {
@@ -25,6 +27,7 @@ impl Intersectable for Object {
     match *self {
       Object::Sphere(ref s) => s.intersect(r),
       Object::Plane(ref p) => p.intersect(r),
+      Object::Cube(ref c) => c.intersect(r),
     }
   }
 
@@ -32,6 +35,7 @@ impl Intersectable for Object {
     match *self {
       Object::Sphere(ref s) => s.normal(p),
       Object::Plane(ref pl) => pl.normal(p),
+      Object::Cube(ref c) => c.normal(p),
     }
   }
 
@@ -39,6 +43,7 @@ impl Intersectable for Object {
     match *self {
       Object::Sphere(ref s) => s.transform(),
       Object::Plane(ref p) => p.transform(),
+      Object::Cube(ref c) => c.transform(),
     }
   }
 
@@ -46,6 +51,7 @@ impl Intersectable for Object {
     match *self {
       Object::Sphere(ref s) => s.material(),
       Object::Plane(ref p) => p.material(),
+      Object::Cube(ref c) => c.material(),
     }
   }
 
@@ -53,6 +59,7 @@ impl Intersectable for Object {
     match *self {
       Object::Sphere(ref s) => s.casts_shadow(),
       Object::Plane(ref p) => p.casts_shadow(),
+      Object::Cube(ref c) => c.casts_shadow(),
     }
   }
 }

@@ -62,7 +62,7 @@ impl World {
     intersections
   }
 
-  pub fn reflected_color(&self, comps: Computations, remaining: u8) -> Color {
+  pub fn reflected_color(&self, comps: &Computations, remaining: u8) -> Color {
     if remaining == 0 {
       return Color { r: 0.0, g: 0.0, b: 0.0 };
     }
@@ -77,6 +77,55 @@ impl World {
     color * comps.object.material().reflective
   }
 
+  pub fn schlick(comps: &Computations) -> f64 {
+    let mut cos = comps.eye_vector.dot(&comps.normal);
+
+    if comps.n1 > comps.n2 {
+      let n = comps.n1 / comps.n2;
+      let sin2_t = n.powi(2) * (1.0 - cos.powi(2));
+
+      if sin2_t > 1.0 {
+        return 1.0
+      }
+
+      let cos_t = (1.0 - sin2_t).sqrt();
+
+      cos = cos_t;
+    }
+
+    let r0 = ((comps.n1 - comps.n2) / (comps.n1 + comps.n2)).powi(2);
+
+    return r0 + (1.0 - r0) * (1.0 - cos).powi(5);
+  }
+
+  pub fn refracted_color(&self, comps: &Computations, remaining: u8) -> Color {
+    if remaining == 0 {
+      return Color { r: 0.0, g: 0.0, b: 0.0 };
+    }
+
+    if comps.object.material().transparency == 0.0 {
+      return Color { r: 0.0, g: 0.0, b: 0.0 }
+    }
+
+    let n_ratio = comps.n1 / comps.n2;
+    let cos_i = comps.eye_vector.dot(&comps.normal);
+    let sin2_t = n_ratio.powi(2) * (1.0 - cos_i.powi(2));
+
+    if sin2_t > 1.0 {
+      return Color { r: 0.0, g: 0.0, b: 0.0 }
+    }
+
+    let cos_t = (1.0 - sin2_t).sqrt();
+
+    let direction = comps.normal * (n_ratio * cos_i - cos_t) - comps.eye_vector * n_ratio;
+
+    let refract_ray = Ray { origin: comps.under_point, direction };
+
+    let color = self.color_at(refract_ray, remaining - 1) * comps.object.material().transparency;
+
+    color
+  }
+
   pub fn shade_hit(&self, comps: Computations, remaining: u8) -> Color {
     let mut color = Color { r: 0.0, g: 0.0, b: 0.0 };
 
@@ -85,21 +134,29 @@ impl World {
       color = color + comps.object.material().lighting_with_object(comps.object, *light, comps.point, comps.eye_vector, comps.normal, in_shadow);
     }
 
-    let reflected = self.reflected_color(comps, remaining);
+    let reflected = self.reflected_color(&comps, remaining);
+    let refracted = self.refracted_color(&comps, remaining);
 
-    color + reflected
+    let material = comps.object.material();
+    if material.reflective > 0.0 && material.transparency > 0.0 {
+      let reflectance = World::schlick(&comps);
+
+      return color + (reflected * reflectance) + (refracted * (1.0 - reflectance));
+    }
+
+    color + reflected + refracted
   }
 
   pub fn color_at(&self, r: Ray, remaining: u8) -> Color {
     let intersections = self.intersect(r);
-    let hit = Intersection::hit(intersections);
+    let hit = Intersection::hit(intersections.clone());
 
     if hit.is_none() {
       return Color { r: 0.0, g: 0.0, b: 0.0 }
     }
 
     let unwrapped_hit = hit.unwrap();
-    let comps = unwrapped_hit.prepare_computations(r);
+    let comps = unwrapped_hit.prepare_computations_with_intersections(r, intersections);
 
     self.shade_hit(comps, remaining)
   }

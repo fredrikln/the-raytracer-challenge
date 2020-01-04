@@ -14,6 +14,8 @@ pub struct Material {
   pub shininess: f64,
   pub reflective: f64,
   pub pattern: Option<Pattern>,
+  pub refractive_index: f64,
+  pub transparency: f64,
 }
 
 impl Material {
@@ -25,7 +27,9 @@ impl Material {
       specular: 0.9,
       shininess: 200.0,
       reflective: 0.0,
-      pattern: None
+      pattern: None,
+      refractive_index: 1.0,
+      transparency: 0.0,
     }
   }
 

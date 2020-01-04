@@ -256,7 +256,7 @@ mod tests {
     m.ambient = 1.0;
     s.material = m.clone();
 
-    let cm = Material { color: Color { r: 1.0, g: 1.0, b: 1.0 }, ambient: 1.0, diffuse: 0.9, specular: 0.9, shininess: 200.0, pattern: None, reflective: 0.0 };
+    let cm = Material { color: Color { r: 1.0, g: 1.0, b: 1.0 }, ambient: 1.0, diffuse: 0.9, specular: 0.9, shininess: 200.0, pattern: None, reflective: 0.0, refractive_index: 1.0, transparency: 0.0 };
 
     assert_eq!(s.material, cm);
   }

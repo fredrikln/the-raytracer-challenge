@@ -39,6 +39,46 @@ impl Intersection<'_> {
     Some(copy[0])
   }
 
+  pub fn prepare_computations_with_intersections(&self, r: Ray, intersections: Vec<Intersection>) -> Computations {
+    let mut comps = self.prepare_computations(r);
+    let hit = Intersection::hit(intersections.clone());
+
+    let mut containers: Vec<Object> = vec![];
+
+    let mut n1: f64 = 1.0;
+    let mut n2: f64 = 1.0;
+
+    for i in intersections {
+      if i == hit.unwrap() {
+        if containers.len() == 0 {
+          n1 = 1.0;
+        } else {
+          n1 = containers.last().unwrap().material().refractive_index;
+        }
+      }
+
+      let contains = containers.iter().position(|&o| o == *i.object);
+      if contains.is_some() {
+        containers.remove(contains.unwrap());
+      } else {
+        containers.push(*i.object);
+      }
+
+      if i == hit.unwrap() {
+        if containers.len() == 0 {
+          n2 = 1.0;
+        } else {
+          n2 = containers.last().unwrap().material().refractive_index;
+        }
+      }
+    }
+
+    comps.n1 = n1;
+    comps.n2 = n2;
+
+    comps
+  }
+
   pub fn prepare_computations(&self, ray: Ray) -> Computations {
     let point = ray.position(self.time);
 
@@ -56,6 +96,7 @@ impl Intersection<'_> {
     }
 
     let over_point = point + normal * EPSILON;
+    let under_point = point - normal * EPSILON;
 
     Computations {
       time: self.time,
@@ -66,10 +107,14 @@ impl Intersection<'_> {
       reflect_vector,
       inside,
       over_point,
+      under_point,
+      n1: 1.0,
+      n2: 1.0,
     }
   }
 }
 
+#[derive(Debug)]
 pub struct Computations<'a> {
   pub time: f64,
   pub object: &'a Object,
@@ -79,6 +124,9 @@ pub struct Computations<'a> {
   pub reflect_vector: Vector,
   pub inside: bool,
   pub over_point: Point,
+  pub under_point: Point,
+  pub n1: f64,
+  pub n2: f64,
 }
 
 #[cfg(test)]
