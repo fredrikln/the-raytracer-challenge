@@ -165,11 +165,29 @@ fn main() {
     lights: vec![light]
   };
 
-  let width: u32 = 200;
+  // Settings for renderer
+  /*
+  Antal trådar: tid
+  ```
+  1: 25s
+  2: 18s
+  4: 11s
+  8: 7s
+  16: 6s
+  32: 5s
+  ```
+  */
+
+  // 1280x720
+  // 1920x1080
+  // 2550x1440
+  // 3840x2160
+  let width: u32 = 300;
   let height = (width as f64 / 1.77777777777777778) as u32;
+  let threads = 4;
+  let antialias = false;
 
   let mut camera = Camera::new(width, height, std::f64::consts::PI / 3.0);
-  camera.antialias = false;
   camera.transform = Camera::view_transform(
     Point { x: 2.0, y: 1.5, z: -5.0 },
     Point { x: 0.0, y: 1.0, z: 0.0 },
@@ -177,10 +195,10 @@ fn main() {
   );
 
   let starttime = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).expect("error");
-  let canvas = camera.render(world);
+  let canvas = camera.render(world, antialias, threads);
   let endtime = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).expect("error");
 
-  if camera.antialias {
+  if antialias {
     println!("Anti-alias on");
   } else {
     println!("Anti-alias off");

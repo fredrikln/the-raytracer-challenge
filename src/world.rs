@@ -13,7 +13,7 @@ use crate::utils::MAX_STEPS;
 
 use std::cmp::Ordering::Equal;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct World {
   pub objects: Vec<Object>,
   pub lights: Vec<PointLight>,

@@ -5,8 +5,9 @@ use crate::ray::Ray;
 use crate::canvas::{Canvas,Color};
 use crate::world::World;
 use crate::utils::MAX_STEPS;
+use std::thread;
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Copy, Clone)]
 pub struct Camera {
   pub hsize: u32,
   pub vsize: u32,
@@ -15,7 +16,12 @@ pub struct Camera {
   pub pixel_size: f64,
   pub half_height: f64,
   pub half_width: f64,
-  pub antialias: bool,
+}
+
+pub struct CoordColor {
+  x: u32,
+  y: u32,
+  c: Color,
 }
 
 impl Camera {
@@ -42,8 +48,7 @@ impl Camera {
       transform: Matrix::identity(),
       half_width,
       half_height,
-      pixel_size,
-      antialias: false
+      pixel_size
     }
   }
 
@@ -61,28 +66,66 @@ impl Camera {
     Ray { origin, direction }
   }
 
-  pub fn render(&self, w: World) -> Canvas {
+  pub fn render(self, w: World, antialias: bool, threads: u32) -> Canvas {
     let mut canvas = Canvas::new(self.hsize, self.vsize);
 
-    for y in 0..self.vsize {
-      for x in 0..self.hsize {
-        let c: Color;
-        if self.antialias {
-          let mut color = Color { r: 0.0, g: 0.0, b: 0.0 };
-          for i in 0..2 {
-            for j in 0..2 {
-              let r = self.ray_for_pixel(x, y, 0.25+(i as f64 * 0.5), 0.25+(j as f64 * 0.5));
-              color = color + w.color_at(r, MAX_STEPS);
+    let mut yparts = threads;
+    if yparts > 2 {
+      yparts = yparts / 2;
+    }
+    if yparts <= 0 {
+      yparts = 1;
+    }
+
+    let mut xparts = threads / 2;
+    if xparts > 2 {
+      xparts = yparts / 2;
+    }
+    if xparts <= 0 {
+      xparts = 1;
+    }
+
+    let mut threads: Vec<thread::JoinHandle<_>> = vec![];
+
+    for yp in 0..yparts {
+      for xp in 0..xparts {
+        let w = w.clone();
+        let thread = thread::spawn(move || {
+          let mut coord_colors: Vec<CoordColor> = vec![];
+
+          for y in (self.vsize/yparts * yp)..(self.vsize/yparts * (yp+1)) {
+            for x in (self.hsize/xparts * xp)..(self.hsize/xparts * (xp+1)) {
+              let c: Color;
+              if antialias {
+                let mut color = Color { r: 0.0, g: 0.0, b: 0.0 };
+                for i in 0..2 {
+                  for j in 0..2 {
+                    let r = self.ray_for_pixel(x, y, 0.25+(i as f64 * 0.5), 0.25+(j as f64 * 0.5));
+                    color = color + w.color_at(r, MAX_STEPS);
+                  }
+                }
+                c = color * (1.0/4.0);
+              } else {
+                let r = self.ray_for_pixel(x, y, 0.5, 0.5);
+                c = w.color_at(r, MAX_STEPS);
+              }
+
+              coord_colors.push(CoordColor { x, y, c });
             }
           }
-          c = color * (1.0/4.0);
-        } else {
-          let r = self.ray_for_pixel(x, y, 0.5, 0.5);
-          c = w.color_at(r, MAX_STEPS);
-        }
 
+          coord_colors
+        });
 
-        canvas.set_pixel(x, y, c);
+        threads.push(thread);
+      }
+    }
+
+    for t in threads {
+      let result = t.join().unwrap();
+
+      for cc in result {
+        canvas.set_pixel(cc.x, cc.y, cc.c);
       }
     }
 
