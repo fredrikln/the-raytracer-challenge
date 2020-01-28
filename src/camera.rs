@@ -4,7 +4,6 @@ use crate::point::Point;
 use crate::ray::Ray;
 use crate::canvas::{Canvas,Color};
 use crate::world::World;
-use crate::utils::MAX_STEPS;
 use std::thread;
 
 #[derive(PartialEq, Debug, Copy, Clone)]
@@ -66,7 +65,7 @@ impl Camera {
     Ray { origin, direction }
   }
 
-  pub fn render(self, w: World, antialias: bool, threads: u32) -> Canvas {
+  pub fn render(self, w: World, antialias: bool, threads: u32, max_steps: u8) -> Canvas {
     let mut canvas = Canvas::new(self.hsize, self.vsize);
 
     let mut yparts = threads;
@@ -101,13 +100,13 @@ impl Camera {
                 for i in 0..2 {
                   for j in 0..2 {
                     let r = self.ray_for_pixel(x, y, 0.25+(i as f64 * 0.5), 0.25+(j as f64 * 0.5));
-                    color = color + w.color_at(r, MAX_STEPS);
+                    color = color + w.color_at(r, max_steps);
                   }
                 }
                 c = color * (1.0/4.0);
               } else {
                 let r = self.ray_for_pixel(x, y, 0.5, 0.5);
-                c = w.color_at(r, MAX_STEPS);
+                c = w.color_at(r, max_steps);
               }
 
               coord_colors.push(CoordColor { x, y, c });
@@ -161,7 +160,6 @@ mod tests {
   use crate::world::World;
   use crate::canvas::Color;
   use crate::utils::equal;
-  use crate::utils::MAX_STEPS;
 
   #[test]
   fn transformation_matrix_for_default_orientation() {

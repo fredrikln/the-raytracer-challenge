@@ -1,5 +1,8 @@
 extern crate image;
 
+use std::path::Path;
+use std::env;
+
 use image::{ImageBuffer, Rgb};
 use std::ops::{Add, Mul, Sub};
 use crate::utils::equal;
@@ -103,8 +106,10 @@ impl Canvas {
     }
   }
 
-  pub fn save(&self, filename: &str) {
-    self.buffer.save(filename).unwrap();
+  pub fn save(&self, path: &str) {
+    let base = env::current_dir().unwrap();
+    let target = base.join("images").join(path);
+    self.buffer.save(target).unwrap();
   }
 }
 

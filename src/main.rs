@@ -155,37 +155,44 @@ fn main() {
   m4.pattern = Some(pattern3);
   left.material = m4;
 
-  let light = PointLight {
+  let default_light = PointLight {
     position: Point { x: -5.0, y: 7.5, z: -5.0 },
     intensity: Color { r: 1.0, g: 1.0, b: 1.0 }
+  };
+  let light1 = PointLight {
+    position: Point { x: -5.0, y: 7.5, z: -5.0 },
+    intensity: Color { r: 0.25, g: 0.25, b: 0.25 }
+  };
+  let light2 = PointLight {
+    position: Point { x: -5.1, y: 7.5, z: -5.1 },
+    intensity: Color { r: 0.25, g: 0.25, b: 0.25 }
+  };
+  let light3 = PointLight {
+    position: Point { x: -5.0, y: 7.5, z: -5.1 },
+    intensity: Color { r: 0.25, g: 0.25, b: 0.25 }
+  };
+  let light4 = PointLight {
+    position: Point { x: -5.1, y: 7.5, z: -5.0 },
+    intensity: Color { r: 0.25, g: 0.25, b: 0.25 }
   };
 
   let world = World {
     objects: vec![Object::Plane(floor), Object::Plane(glass_floor), Object::Plane(roof), Object::Plane(left_wall), Object::Plane(right_wall), Object::Plane(far_wall), Object::Plane(near_wall), Object::Sphere(middle), Object::Sphere(right), Object::Sphere(left), Object::Cube(top), /*Object::Sphere(top_inside)*/],
-    lights: vec![light]
+    lights: vec![default_light/*, light1, light2, light3, light4*/]
   };
 
   // Settings for renderer
-  /*
-  Antal trådar: tid
-  ```
-  1: 25s
-  2: 18s
-  4: 11s
-  8: 7s
-  16: 6s
-  32: 5s
-  ```
-  */
 
   // 1280x720
   // 1920x1080
   // 2550x1440
   // 3840x2160
+  // 7680x4320
   let width: u32 = 300;
   let height = (width as f64 / 1.77777777777777778) as u32;
   let threads = 4;
   let antialias = false;
+  let recursion_depth = 5;
 
   let mut camera = Camera::new(width, height, std::f64::consts::PI / 3.0);
   camera.transform = Camera::view_transform(
@@ -195,7 +202,7 @@ fn main() {
   );
 
   let starttime = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).expect("error");
-  let canvas = camera.render(world, antialias, threads);
+  let canvas = camera.render(world, antialias, threads, recursion_depth);
   let endtime = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).expect("error");
 
   if antialias {
@@ -208,6 +215,6 @@ fn main() {
   println!("Average {:.3} microseconds per pixel", (endtime - starttime).as_micros() as f64 / (width*height) as f64);
 
   let filetime = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).expect("error").as_secs();
-  let filename: &str = &format!("images/image-{}-{}x{}.png", filetime, width, height);
+  let filename: &str = &format!("image-{}-{}x{}.png", filetime, width, height);
   canvas.save(filename);
 }

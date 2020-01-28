@@ -9,7 +9,6 @@ use crate::intersection::Intersection;
 use crate::intersection::Computations;
 use crate::vector::Vector;
 use crate::object::{Object, Intersectable};
-use crate::utils::MAX_STEPS;
 
 use std::cmp::Ordering::Equal;
 
@@ -193,7 +192,6 @@ mod tests {
   use crate::intersection::Intersection;
   use crate::utils::EPSILON;
   use crate::object::Object;
-  use crate::utils::MAX_STEPS;
 
   #[test]
   fn empty_world() {
@@ -250,7 +248,7 @@ mod tests {
 
     let comps = i.prepare_computations(r);
 
-    let c = w.shade_hit(comps, MAX_STEPS);
+    let c = w.shade_hit(comps, 5);
 
     assert_eq!(c, Color { r: 0.38066, g: 0.47583, b: 0.2855 });
   }
@@ -269,7 +267,7 @@ mod tests {
 
     let comps = i.prepare_computations(r);
 
-    let c = w.shade_hit(comps, MAX_STEPS);
+    let c = w.shade_hit(comps, 5);
 
     assert_eq!(c, Color { r: 0.90498, g: 0.90498, b: 0.90498 });
   }
@@ -279,7 +277,7 @@ mod tests {
     let w = World::default();
     let r = Ray { origin: Point { x: 0.0, y: 0.0, z: -5.0 }, direction: Vector { x: 0.0, y: 1.0, z: 0.0 } };
 
-    let c = w.color_at(r, MAX_STEPS);
+    let c = w.color_at(r, 5);
 
     assert_eq!(c, Color { r: 0.0, g: 0.0, b: 0.0 });
   }
@@ -289,7 +287,7 @@ mod tests {
     let w = World::default();
     let r = Ray { origin: Point { x: 0.0, y: 0.0, z: -5.0 }, direction: Vector { x: 0.0, y: 0.0, z: 1.0 } };
 
-    let c = w.color_at(r, MAX_STEPS);
+    let c = w.color_at(r, 5);
 
     assert_eq!(c, Color { r: 0.38066, g: 0.47583, b: 0.2855 });
   }
@@ -315,7 +313,7 @@ mod tests {
 
     w.objects = vec![Object::Sphere(s1), Object::Sphere(s2)];
 
-    let c = w.color_at(r, MAX_STEPS);
+    let c = w.color_at(r, 5);
 
     assert_eq!(c, s2.material.color);
   }
@@ -372,7 +370,7 @@ mod tests {
     let i = Intersection { time: 4.0, object: &Object::Sphere(s2) };
     let comps = i.prepare_computations(r);
 
-    let c = w.shade_hit(comps, MAX_STEPS);
+    let c = w.shade_hit(comps, 5);
 
     assert_eq!(c, Color { r: 0.1, g: 0.1, b: 0.1 });
   }
