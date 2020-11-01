@@ -9,3 +9,4 @@ edition = "2018"
 [dependencies]
 #float-cmp = "0.5.3"
 image = "0.22.3"
+rayon = "1.5"

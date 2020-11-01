@@ -1,10 +1,14 @@
+use crate::canvas::{Canvas, Color};
 use crate::matrix::Matrix;
-use crate::vector::Vector;
 use crate::point::Point;
 use crate::ray::Ray;
-use crate::canvas::{Canvas,Color};
+use crate::vector::Vector;
 use crate::world::World;
+use std::sync::Arc;
+use std::sync::Mutex;
 use std::thread;
+
+use rayon::prelude::*;
 
 #[derive(PartialEq, Debug, Copy, Clone)]
 pub struct Camera {
@@ -47,7 +51,7 @@ impl Camera {
       transform: Matrix::identity(),
       half_width,
       half_height,
-      pixel_size
+      pixel_size,
     }
   }
 
@@ -58,74 +62,56 @@ impl Camera {
     let world_x = self.half_width - x_offset;
     let world_y = self.half_height - y_offset;
 
-    let pixel = self.transform.inverse().unwrap() * Point { x: world_x, y: world_y, z: -1.0 };
-    let origin = self.transform.inverse().unwrap() * Point { x: 0.0, y: 0.0, z: 0.0 };
+    let pixel = self.transform.inverse().unwrap()
+      * Point {
+        x: world_x,
+        y: world_y,
+        z: -1.0,
+      };
+    let origin = self.transform.inverse().unwrap()
+      * Point {
+        x: 0.0,
+        y: 0.0,
+        z: 0.0,
+      };
     let direction = (pixel - origin).normalize();
 
     Ray { origin, direction }
   }
 
-  pub fn render(self, w: World, antialias: bool, threads: u32, max_steps: u8) -> Canvas {
+  pub fn render(self, w: World, antialias: bool, max_steps: u8) -> Canvas {
     let mut canvas = Canvas::new(self.hsize, self.vsize);
 
-    let mut yparts = threads;
-    if yparts > 2 {
-      yparts = yparts / 2;
-    }
-    if yparts <= 0 {
-      yparts = 1;
-    }
+    let coord_colors = Arc::new(Mutex::new(Vec::new()));
 
-    let mut xparts = threads / 2;
-    if xparts > 2 {
-      xparts = yparts / 2;
-    }
-    if xparts <= 0 {
-      xparts = 1;
-    }
+    (0..self.vsize).into_par_iter().for_each(|y| {
+      for x in 0..self.hsize {
+        let c: Color;
 
-    let mut threads: Vec<thread::JoinHandle<_>> = vec![];
-
-    for yp in 0..yparts {
-      for xp in 0..xparts {
-        let w = w.clone();
-        let thread = thread::spawn(move || {
-          let mut coord_colors: Vec<CoordColor> = vec![];
-
-          for y in (self.vsize/yparts * yp)..(self.vsize/yparts * (yp+1)) {
-            for x in (self.hsize/xparts * xp)..(self.hsize/xparts * (xp+1)) {
-              let c: Color;
-              if antialias {
-                let mut color = Color { r: 0.0, g: 0.0, b: 0.0 };
-                for i in 0..2 {
-                  for j in 0..2 {
-                    let r = self.ray_for_pixel(x, y, 0.25+(i as f64 * 0.5), 0.25+(j as f64 * 0.5));
-                    color = color + w.color_at(r, max_steps);
-                  }
-                }
-                c = color * (1.0/4.0);
-              } else {
-                let r = self.ray_for_pixel(x, y, 0.5, 0.5);
-                c = w.color_at(r, max_steps);
-              }
-
-              coord_colors.push(CoordColor { x, y, c });
+        if antialias {
+          let mut color = Color {
+            r: 0.0,
+            g: 0.0,
+            b: 0.0,
+          };
+          for i in 0..2 {
+            for j in 0..2 {
+              let r = self.ray_for_pixel(x, y, 0.25 + (i as f64 * 0.5), 0.25 + (j as f64 * 0.5));
+              color = color + w.color_at(r, max_steps);
             }
           }
+          c = color * (1.0 / 4.0);
+        } else {
+          let r = self.ray_for_pixel(x, y, 0.5, 0.5);
+          c = w.color_at(r, max_steps);
+        }
 
-          coord_colors
-        });
-
-        threads.push(thread);
+        coord_colors.lock().unwrap().push(CoordColor { x, y, c });
       }
-    }
+    });
 
-    for t in threads {
-      let result = t.join().unwrap();
-
-      for cc in result {
-        canvas.set_pixel(cc.x, cc.y, cc.c);
-      }
+    for cc in coord_colors.lock().unwrap().iter() {
+      canvas.set_pixel(cc.x, cc.y, cc.c)
     }
 
     canvas
@@ -142,30 +128,41 @@ impl Camera {
         [left.x, left.y, left.z, 0.0],
         [true_up.x, true_up.y, true_up.z, 0.0],
         [-forward.x, -forward.y, -forward.z, 0.0],
-        [0.0, 0.0, 0.0, 1.0]
-      ]
+        [0.0, 0.0, 0.0, 1.0],
+      ],
     };
 
     orientation * Matrix::translate(-from.x, -from.y, -from.z)
   }
 }
 
-
 #[cfg(test)]
 mod tests {
   use crate::camera::Camera;
-  use crate::matrix::Matrix;
-  use crate::vector::Vector;
-  use crate::point::Point;
-  use crate::world::World;
   use crate::canvas::Color;
+  use crate::matrix::Matrix;
+  use crate::point::Point;
   use crate::utils::equal;
+  use crate::vector::Vector;
+  use crate::world::World;
 
   #[test]
   fn transformation_matrix_for_default_orientation() {
-    let from = Point { x: 0.0, y: 0.0, z: 0.0 };
-    let to = Point { x: 0.0, y: 0.0, z: -1.0 };
-    let up = Vector { x: 0.0, y: 1.0, z: 0.0 };
+    let from = Point {
+      x: 0.0,
+      y: 0.0,
+      z: 0.0,
+    };
+    let to = Point {
+      x: 0.0,
+      y: 0.0,
+      z: -1.0,
+    };
+    let up = Vector {
+      x: 0.0,
+      y: 1.0,
+      z: 0.0,
+    };
 
     let t = Camera::view_transform(from, to, up);
 
@@ -174,9 +171,21 @@ mod tests {
 
   #[test]
   fn transformation_matrix_for_looking_in_positive_z() {
-    let from = Point { x: 0.0, y: 0.0, z: 0.0 };
-    let to = Point { x: 0.0, y: 0.0, z: 1.0 };
-    let up = Vector { x: 0.0, y: 1.0, z: 0.0 };
+    let from = Point {
+      x: 0.0,
+      y: 0.0,
+      z: 0.0,
+    };
+    let to = Point {
+      x: 0.0,
+      y: 0.0,
+      z: 1.0,
+    };
+    let up = Vector {
+      x: 0.0,
+      y: 1.0,
+      z: 0.0,
+    };
 
     let t = Camera::view_transform(from, to, up);
 
@@ -185,9 +194,21 @@ mod tests {
 
   #[test]
   fn view_transformation_moves_the_world() {
-    let from = Point { x: 0.0, y: 0.0, z: 8.0 };
-    let to = Point { x: 0.0, y: 0.0, z: 0.0 };
-    let up = Vector { x: 0.0, y: 1.0, z: 0.0 };
+    let from = Point {
+      x: 0.0,
+      y: 0.0,
+      z: 8.0,
+    };
+    let to = Point {
+      x: 0.0,
+      y: 0.0,
+      z: 0.0,
+    };
+    let up = Vector {
+      x: 0.0,
+      y: 1.0,
+      z: 0.0,
+    };
 
     let t = Camera::view_transform(from, to, up);
 
@@ -196,20 +217,35 @@ mod tests {
 
   #[test]
   fn arbitrary_view_transformation() {
-    let from = Point { x: 1.0, y: 3.0, z: 2.0 };
-    let to = Point { x: 4.0, y: -2.0, z: 8.0 };
-    let up = Vector { x: 1.0, y: 1.0, z: 0.0 };
+    let from = Point {
+      x: 1.0,
+      y: 3.0,
+      z: 2.0,
+    };
+    let to = Point {
+      x: 4.0,
+      y: -2.0,
+      z: 8.0,
+    };
+    let up = Vector {
+      x: 1.0,
+      y: 1.0,
+      z: 0.0,
+    };
 
     let t = Camera::view_transform(from, to, up);
 
-    assert_eq!(t, Matrix {
-      data: [
-        [-0.50709,  0.50709,  0.67612, -2.36643],
-        [ 0.76772,  0.60609,  0.12122, -2.82843],
-        [-0.35857,  0.59761, -0.71714,  0.00000],
-        [ 0.00000,  0.00000,  0.00000,  1.00000],
-      ]
-    });
+    assert_eq!(
+      t,
+      Matrix {
+        data: [
+          [-0.50709, 0.50709, 0.67612, -2.36643],
+          [0.76772, 0.60609, 0.12122, -2.82843],
+          [-0.35857, 0.59761, -0.71714, 0.00000],
+          [0.00000, 0.00000, 0.00000, 1.00000],
+        ]
+      }
+    );
   }
 
   #[test]
@@ -253,8 +289,22 @@ mod tests {
     let c = Camera::new(201, 101, std::f64::consts::PI / 2.0);
     let r = c.ray_for_pixel(100, 50, 0.5, 0.5);
 
-    assert_eq!(r.origin, Point { x: 0.0, y: 0.0, z: 0.0 });
-    assert_eq!(r.direction, Vector { x: 0.0, y: 0.0, z: -1.0 });
+    assert_eq!(
+      r.origin,
+      Point {
+        x: 0.0,
+        y: 0.0,
+        z: 0.0
+      }
+    );
+    assert_eq!(
+      r.direction,
+      Vector {
+        x: 0.0,
+        y: 0.0,
+        z: -1.0
+      }
+    );
   }
 
   #[test]
@@ -262,8 +312,22 @@ mod tests {
     let c = Camera::new(201, 101, std::f64::consts::PI / 2.0);
     let r = c.ray_for_pixel(0, 0, 0.5, 0.5);
 
-    assert_eq!(r.origin, Point { x: 0.0, y: 0.0, z: 0.0 });
-    assert_eq!(r.direction, Vector { x: 0.6651864, y: 0.33259323, z: -0.66851234 });
+    assert_eq!(
+      r.origin,
+      Point {
+        x: 0.0,
+        y: 0.0,
+        z: 0.0
+      }
+    );
+    assert_eq!(
+      r.direction,
+      Vector {
+        x: 0.6651864,
+        y: 0.33259323,
+        z: -0.66851234
+      }
+    );
   }
 
   #[test]
@@ -272,8 +336,22 @@ mod tests {
     c.transform = Matrix::rotate_y(std::f64::consts::PI / 4.0) * Matrix::translate(0.0, -2.0, 5.0);
     let r = c.ray_for_pixel(100, 50, 0.5, 0.5);
 
-    assert_eq!(r.origin, Point { x: 0.0, y: 2.0, z: -5.0 });
-    assert_eq!(r.direction, Vector { x: ((2.0 as f64).sqrt() / 2.0), y: 0.0, z: -((2.0 as f64).sqrt() / 2.0) });
+    assert_eq!(
+      r.origin,
+      Point {
+        x: 0.0,
+        y: 2.0,
+        z: -5.0
+      }
+    );
+    assert_eq!(
+      r.direction,
+      Vector {
+        x: ((2.0 as f64).sqrt() / 2.0),
+        y: 0.0,
+        z: -((2.0 as f64).sqrt() / 2.0)
+      }
+    );
   }
 
   #[test]
@@ -281,13 +359,32 @@ mod tests {
     let w = World::default();
     let mut c = Camera::new(11, 11, std::f64::consts::PI / 2.0);
 
-    let from = Point { x: 0.0, y: 0.0, z: -5.0 };
-    let to = Point { x: 0.0, y: 0.0, z: 0.0 };
-    let up = Vector { x: 0.0, y: 1.0, z: 0.0 };
+    let from = Point {
+      x: 0.0,
+      y: 0.0,
+      z: -5.0,
+    };
+    let to = Point {
+      x: 0.0,
+      y: 0.0,
+      z: 0.0,
+    };
+    let up = Vector {
+      x: 0.0,
+      y: 1.0,
+      z: 0.0,
+    };
     c.transform = Camera::view_transform(from, to, up);
 
     let image = c.render(w);
 
-    assert_eq!(image.get_pixel(5, 5), Color { r: 0.38039216, g: 0.4745098, b: 0.28235295 });
+    assert_eq!(
+      image.get_pixel(5, 5),
+      Color {
+        r: 0.38039216,
+        g: 0.4745098,
+        b: 0.28235295
+      }
+    );
   }
 }
